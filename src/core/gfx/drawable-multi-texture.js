@@ -61,6 +61,10 @@ class WebGLTexturePage extends TexturePage {
     this.height = height;
 
     this.glTexture = this.createGLTexture(texture.manager.game.renderer);
+    // MultiPipeline.batchSprite reads frame.glTexture.flipY (the WebGL
+    // texture, not the Phaser Texture). These atlas pixels are top-down.
+    // Suppress the automatic inversion used for framebuffer textures.
+    this.glTexture.flipY = true;
     this.source = new TextureSource(
       this.texture,
       this.glTexture,

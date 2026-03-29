@@ -4,6 +4,7 @@ import { DrawableMultiTexture } from "./drawable-multi-texture";
 import { PendingPromise } from "../util/pending-promise";
 import { isEmpty } from "../util/object-utils";
 import { removeFirst } from "../util/array-utils";
+import { createPixelHitMask } from "./pixel-hit-mask.js";
 
 class TextureCacheEntry {
   constructor(key, defaultAsset) {
@@ -12,6 +13,9 @@ class TextureCacheEntry {
     this.page = null;
     this.bin = null;
     this.refCount = 0;
+    this.hitMask = null;
+    this.wantsHitMask = false;
+    this.hitMaskPending = null;
     this.loadingCompletePromise = new PendingPromise();
   }
 
@@ -203,9 +207,9 @@ export class TextureCache {
     return entry;
   }
 
-  getResource(fileID, resourceID) {
+  getResource(fileID, resourceID, hitTest = false) {
     let key = this.makeResourceKey(fileID, resourceID);
-    return this.getEntry(key, () => {
+    const entry = this.getEntry(key, () => {
       return new ResourceTextureCacheEntry(
         key,
         this.assetFactory.getDefault(),
@@ -213,6 +217,29 @@ export class TextureCache {
         resourceID,
       );
     });
+    if (hitTest) {
+      entry.wantsHitMask = true;
+      // Floor and Top share gfx003. If this was already decoded as floor,
+      // build its foreground mask once without retaining every floor's RGBA.
+      if (!entry.loadingComplete && !entry.hitMask && !entry.hitMaskPending) {
+        entry.hitMaskPending = entry
+          .loadGFX(this.gfxLoader)
+          .then((pixels) => {
+            if (
+              this.scene.textures.game !== null &&
+              this.entries.get(key) === entry
+            )
+              entry.hitMask = createPixelHitMask(pixels);
+          })
+          .catch((error) =>
+            console.warn("Unable to prepare graphic hit mask", error),
+          )
+          .finally(() => {
+            entry.hitMaskPending = null;
+          });
+      }
+    }
+    return entry;
   }
 
   getSpec(tileSpec) {
@@ -323,6 +350,10 @@ export class TextureCache {
       return;
     }
 
+    if (entry.hitMask === null && entry.wantsHitMask) {
+      entry.hitMask = createPixelHitMask(pixels);
+    }
+
     if (
       !this.handleJumboEntry(entry, pixels) &&
       this.findSpace(entry, pixels.width, pixels.height)
@@ -427,7 +458,9 @@ export class EvictingTextureCache extends TextureCache {
 
   evict() {
     for (let [key, value] of this.entries.entries()) {
-      if (value.refCount === 0) {
+      // In-flight entries still refer to the shared default texture. Evicting
+      // one would destroy that texture and race its eventual atlas upload.
+      if (value.refCount === 0 && !value.loadingComplete) {
         this.evictEntry(key);
       }
     }
