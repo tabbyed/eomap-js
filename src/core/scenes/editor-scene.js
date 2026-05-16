@@ -10,6 +10,7 @@ import { MoveTool } from "../tools/move-tool";
 import { ZoomTool } from "../tools/zoom-tool";
 import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
+import { LampTool } from "../tools/lamp-tool";
 
 import "../gameobjects/eomap";
 import "../gameobjects/cursor";
@@ -79,8 +80,16 @@ export class EditorScene extends Phaser.Scene {
     );
 
     this.mapState.gameObject = this.map;
+    this.map.setLighting(this.mapState.lighting);
+    this.map.setLightingPreview(
+      this.data.get("lightingToolState")?.preview ?? true,
+    );
 
     this.tools = this.createTools();
+    this.data.events.on("changedata-lightingToolState", () => {
+      this.tools.get("lighting").clearPreview();
+      this.map.setLightingPreview(this.data.get("lightingToolState").preview);
+    });
 
     let cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl({
@@ -154,6 +163,7 @@ export class EditorScene extends Phaser.Scene {
       ["zoom", new ZoomTool()],
       ["fill", new FillTool()],
       ["entity", new EntityTool()],
+      ["lighting", new LampTool(this)],
     ]);
   }
 
@@ -201,6 +211,9 @@ export class EditorScene extends Phaser.Scene {
     // This happens for spacebar keyboard events when an action button on the
     // sidebar or palette has focus.
     this.onKeyDown = (event) => {
+      if (!this.input.keyboard.enabled) return;
+      if (event.code === "Escape" && this.selectedTool === "lighting")
+        this.tools.get("lighting").cancel();
       if (event.code === "Space") {
         this.spacebarDown = true;
       }
@@ -237,10 +250,25 @@ export class EditorScene extends Phaser.Scene {
       }
     }
 
+    const lightingChanged = this.tools.get("lighting").update();
+    // Selection targets visible glass/bulbs rather than the ground tile behind
+    // them. Keep the ordinary tile cursor for placement and other map tools.
+    const cursorVisible =
+      this.cursorPos.valid &&
+      !(
+        this.selectedTool === "lighting" &&
+        this.data.get("lightingToolState")?.mode === "select"
+      );
+    const cursorChanged = this.cursor.visible !== cursorVisible;
+    this.cursor.visible = cursorVisible;
     this.map.update(time, delta);
 
     this.render.shouldRender =
-      this.map.shouldRender || this.cursor.shouldRender || this.currentPosDirty;
+      this.map.shouldRender ||
+      this.cursor.shouldRender ||
+      this.currentPosDirty ||
+      cursorChanged ||
+      lightingChanged;
 
     if (this.currentPosDirty) {
       this.data.set("currentPos", this.currentPos);

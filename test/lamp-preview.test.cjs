@@ -1,0 +1,198 @@
+const assert = require("node:assert/strict");
+const { EventEmitter } = require("node:events");
+const { test } = require("node:test");
+
+require("../scripts/register-core.cjs");
+const { EMF } = require("../src/core/data/emf");
+const { MapState } = require("../src/core/state/map-state");
+const { LightField } = require("../src/core/lighting/light-field");
+const {
+  defaultLighting,
+  lightSettings,
+} = require("../src/core/lighting/lamps");
+const { LampTool } = require("../src/core/tools/lamp-tool");
+
+const origin = { x: 5, y: 5 };
+const destination = { x: 14, y: 6 };
+
+function lightMap(kind, position) {
+  const emf = EMF.new(24, 18, "Move preview");
+  const lighting = defaultLighting();
+  lighting.ambient = { color: "#ffffff", brightness: 0.2 };
+  const settings = lightSettings({
+    enabled: true,
+    color: "#ffaa66",
+    brightness: 0.9,
+    radius: 3,
+    height: 32,
+  });
+  // A second source ensures preview cleanup preserves unrelated lighting.
+  lighting.lights["19,14"] = { ...settings, color: "#6677ff", height: 0 };
+  if (kind === "lamp") {
+    emf.getTile(position.x, position.y).gfx[1] = 7;
+    lighting.lamps[`${position.x},${position.y},7`] = settings;
+  } else lighting.lights[`${position.x},${position.y}`] = settings;
+  return { emf, lighting };
+}
+
+function drawingStub() {
+  const stub = {};
+  for (const method of [
+    "setDepth",
+    "setVisible",
+    "clear",
+    "lineStyle",
+    "strokeRect",
+    "strokeCircle",
+    "strokeEllipse",
+    "lineBetween",
+    "setTexture",
+    "setOrigin",
+    "setPosition",
+    "setScale",
+    "setAlpha",
+    "setTint",
+  ])
+    stub[method] = () => stub;
+  return stub;
+}
+
+function fixture(kind) {
+  const { emf, lighting } = lightMap(kind, origin);
+  const mapState = MapState.fromEMF(emf);
+  mapState.lighting = lighting;
+  const field = new LightField(emf, lighting);
+  const map = {
+    emf,
+    lightField: field,
+    lightingSettings: lighting,
+    scrollX: 0,
+    scrollY: 0,
+    zoom: 1,
+    width: 800,
+    height: 600,
+    camera: {
+      dirty: false,
+      scrollX: 0,
+      scrollY: 0,
+      preRender() {},
+      matrix: { transformPoint: (x, y) => ({ x, y }) },
+    },
+    invalidateCachedFrame() {},
+    setLighting(settings) {
+      this.lightingSettings = settings;
+      field.setSettings(settings);
+    },
+    setGraphic(x, y, graphic) {
+      emf.getTile(x, y).gfx[1] = graphic;
+      field.updateTile(x, y);
+    },
+  };
+  mapState.gameObject = map;
+  mapState.saved();
+  let toolState = {
+    mode: "move",
+    preset: kind === "free" ? "free" : "street",
+    selection: { ...origin, kind },
+    preview: true,
+    guides: false,
+  };
+  const events = new EventEmitter();
+  events.on("lighting-tool-state", (next) => {
+    toolState = next;
+  });
+  const entry = {
+    loadingComplete: null,
+    incRef() {},
+    decRef() {},
+    asset: {
+      getFrame: () => ({
+        width: 24,
+        height: 128,
+        name: "lamp",
+        texture: { key: "test" },
+      }),
+    },
+  };
+  const scene = {
+    emf,
+    mapState,
+    map,
+    events,
+    commandInvoker: mapState.commandInvoker,
+    data: { get: () => toolState },
+    selectedTool: "lighting",
+    currentPos: { ...destination, valid: true },
+    add: { graphics: drawingStub, image: drawingStub },
+    textureCache: { getResource: () => entry },
+    gfxLoader: { resourceInfo: () => true },
+  };
+  return { scene, tool: new LampTool(scene), field, mapState };
+}
+
+function assertFieldAt(field, kind, position) {
+  const { emf, lighting } = lightMap(kind, position);
+  const expected = new LightField(emf, lighting);
+  let maxError = 0;
+  for (let i = 0; i < field.values.length; i++)
+    maxError = Math.max(
+      maxError,
+      Math.abs(field.values[i] - expected.values[i]),
+    );
+  assert.ok(
+    maxError < 1e-6,
+    `Light field differs from a fresh field by ${maxError}`,
+  );
+}
+
+for (const kind of ["free", "lamp"]) {
+  test(`${kind}: rebuilding the map field refreshes an active move preview`, () => {
+    const { scene, tool } = fixture(kind);
+    tool.update();
+    scene.map.lightField = new LightField(scene.emf, scene.mapState.lighting);
+    tool.update();
+    assertFieldAt(scene.map.lightField, kind, destination);
+    tool.cancel();
+    assertFieldAt(scene.map.lightField, kind, origin);
+    assert.equal(scene.map.displacedLampKey, null);
+  });
+
+  test(`${kind}: move preview replaces the origin; cancelling restores all contributions`, () => {
+    const { scene, tool, field, mapState } = fixture(kind);
+    const savedSettings = JSON.stringify(mapState.lighting);
+    tool.update();
+    assertFieldAt(field, kind, destination);
+    assert.equal(JSON.stringify(mapState.lighting), savedSettings);
+    assert.equal(mapState.commandInvoker.undoStack.length, 0);
+
+    // Moving the pointer must remove the previous ghost, not accumulate copies.
+    scene.currentPos = { x: 11, y: 11, valid: true };
+    tool.update();
+    assertFieldAt(field, kind, scene.currentPos);
+    tool.cancel();
+    tool.update();
+    assertFieldAt(field, kind, origin);
+    assert.equal(mapState.dirty, false);
+  });
+
+  test(`${kind}: committing an active preview then undoing/redoing leaves no light residue`, () => {
+    const { scene, tool, field, mapState } = fixture(kind);
+    tool.update();
+    tool.handleLeftPointerDown(scene);
+    tool.update();
+    assertFieldAt(field, kind, destination);
+    assert.equal(mapState.commandInvoker.undoStack.length, 1);
+    assert.equal(field.sources.size, 2);
+    assert.equal(mapState.dirty, true);
+
+    mapState.commandInvoker.undo();
+    tool.update();
+    assertFieldAt(field, kind, origin);
+    assert.equal(field.sources.size, 2);
+    assert.equal(mapState.dirty, false);
+    mapState.commandInvoker.redo();
+    tool.update();
+    assertFieldAt(field, kind, destination);
+    assert.equal(field.sources.size, 2);
+  });
+}

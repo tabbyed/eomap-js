@@ -1,4 +1,5 @@
 import { CommandInvoker } from "../command/command";
+import { defaultLighting } from "../lighting/lamps.js";
 
 export class MapState {
   constructor() {
@@ -12,6 +13,9 @@ export class MapState {
     this.scrollX = null;
     this.scrollY = null;
     this.zoom = null;
+    this.lighting = defaultLighting();
+    this.lightingFileHandle = null;
+    this.savedLighting = JSON.stringify(this.lighting);
   }
 
   static fromFileHandle(fileHandle) {
@@ -32,6 +36,9 @@ export class MapState {
     copy.scrollX = this.scrollX;
     copy.scrollY = this.scrollY;
     copy.zoom = this.zoom;
+    copy.lighting = this.lighting;
+    copy.lightingFileHandle = this.lightingFileHandle;
+    copy.savedLighting = this.savedLighting;
     copy.lastSavedCommand = null;
     return copy;
   }
@@ -76,8 +83,34 @@ export class MapState {
 
   get dirty() {
     return (
-      this.lastSavedCommand !== (this.commandInvoker.nextUndoCommand || null)
+      this.lastSavedCommand !== this.currentMapCommand || this.lightingDirty
     );
+  }
+
+  get lightingDirty() {
+    return this.savedLighting !== this.lightingJson;
+  }
+
+  // Lighting settings are immutable, so each object is serialized at most
+  // once. `dirty` is read after every edit; map edits no longer cost O(U).
+  get lightingJson() {
+    if (this.serializedLighting !== this.lighting) {
+      this.serializedLighting = this.lighting;
+      this.cachedLightingJson = JSON.stringify(this.lighting);
+    }
+    return this.cachedLightingJson;
+  }
+
+  get currentMapCommand() {
+    for (let i = this.commandInvoker.undoStack.length - 1; i >= 0; i--) {
+      const command = this.commandInvoker.undoStack[i];
+      if (command.affectsMap !== false) return command;
+    }
+    return null;
+  }
+
+  get hasLightingMetadata() {
+    return this.lightingJson !== JSON.stringify(defaultLighting());
   }
 
   get filename() {
@@ -88,6 +121,7 @@ export class MapState {
   }
 
   saved() {
-    this.lastSavedCommand = this.commandInvoker.nextUndoCommand || null;
+    this.lastSavedCommand = this.currentMapCommand;
+    this.savedLighting = this.lightingJson;
   }
 }
