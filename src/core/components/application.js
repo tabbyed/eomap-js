@@ -13,6 +13,16 @@ import "./properties";
 import "./settings";
 import "./about";
 import "./prompt";
+import "./lighting-panel";
+import { LightingCommand } from "../command/lighting-command";
+import { saveMapWithLighting, saveLighting } from "../lighting/save.js";
+import {
+  ambientSettings,
+  selectedLight,
+  withLight,
+  lightSettings,
+  parseLighting,
+} from "../lighting/lamps.js";
 
 import { Startup } from "./startup";
 import { Palette } from "./palette";
@@ -36,7 +46,6 @@ import { PromptState, PromptType } from "../state/prompt-state";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
-import { EOBuilder } from "../data/eo-builder";
 import { CHAR_MAX } from "../data/eo-numeric-limits";
 
 import { FileSystemProvider } from "../filesystem/file-system-provider";
@@ -103,6 +112,22 @@ export class Application extends LitElement {
         grid-row: 2 / 4;
         grid-column: 3;
         border-left: 1px solid var(--spectrum-global-color-gray-200);
+      }
+
+      .lighting-demo {
+        grid-row: 2;
+        grid-column: 2;
+        align-self: end;
+        justify-self: center;
+        z-index: 102;
+        margin: 25px;
+        padding: 12px 20px;
+        background: #edbd72;
+        color: #211c15;
+        border: none;
+        border-radius: 5px;
+        font: 600 14px system-ui;
+        cursor: pointer;
       }
 
       eomap-infobar {
@@ -188,6 +213,23 @@ export class Application extends LitElement {
   @state({ type: String })
   selectedTool = "draw";
 
+  @state()
+  lightingToolState = {
+    mode: "select",
+    preset: "street",
+    preview: true,
+    guides: true,
+    selection: null,
+    duplicate: null,
+    notice: "",
+  };
+
+  @state()
+  lightingRevision = 0;
+
+  @state()
+  lightingInspectorFocused = false;
+
   @state({ type: Number })
   selectedLayer = 0;
 
@@ -236,6 +278,7 @@ export class Application extends LitElement {
     if (!this.isToolBeingUsed && !event.repeat) {
       const tool = this.sidebar.getToolKeyForKeybinding(event);
       if (tool) {
+        this.clearLightingPreview();
         this.selectedTool = tool;
       }
     }
@@ -253,6 +296,7 @@ export class Application extends LitElement {
   };
 
   onMapStateChange = () => {
+    ++this.lightingRevision;
     this.dirty = this.mapState.dirty;
     this.hasUndoCommands = this.mapState.commandInvoker.hasUndoCommands;
     this.hasRedoCommands = this.mapState.commandInvoker.hasRedoCommands;
@@ -273,10 +317,12 @@ export class Application extends LitElement {
   }
 
   undo() {
+    this.clearLightingPreview();
     this.commandInvoker.undo();
   }
 
   redo() {
+    this.clearLightingPreview();
     this.commandInvoker.redo();
   }
 
@@ -407,6 +453,13 @@ export class Application extends LitElement {
     if (previous) {
       previous.commandInvoker.off("change", this.onMapStateChange);
     }
+    this.lightingToolState = {
+      ...this.lightingToolState,
+      mode: "select",
+      selection: null,
+      duplicate: null,
+      notice: "",
+    };
     this.mapState.commandInvoker.on("change", this.onMapStateChange);
     this.onMapStateChange();
   }
@@ -480,6 +533,12 @@ export class Application extends LitElement {
     if (this.validGfx() && this.mapState.loaded) {
       return html`
         <eomap-editor
+          @pointerdown=${() => {
+            this.lightingInspectorFocused = false;
+            this.shadowRoot
+              .querySelector("eomap-lighting-panel")
+              ?.shadowRoot.activeElement?.blur();
+          }}
           .gfxLoader=${this.gfxLoader}
           .mapState=${this.mapState}
           .layerVisibility=${this.layerVisibility}
@@ -488,6 +547,7 @@ export class Application extends LitElement {
           .selectedDrawID=${this.selectedDrawID}
           .entityState=${this.entityState}
           .mapPropertiesState=${this.mapPropertiesState}
+          .lightingToolState=${this.lightingToolState}
           .pointerEnabled=${this.pointerEnabled()}
           .keyboardEnabled=${this.keyboardEnabled()}
           @changedata-currentPos=${this.onCurrentPosChanged}
@@ -495,6 +555,9 @@ export class Application extends LitElement {
           @changedata-isToolBeingUsed=${this.onIsToolBeingUsedChanged}
           @request-entity-editor=${this.onEntityEditorRequested}
           @zoom-changed=${this.onEditorZoomChanged}
+          @lighting-tool-state=${(event) => {
+            this.lightingToolState = event.detail;
+          }}
         ></eomap-editor>
       `;
     }
@@ -526,11 +589,21 @@ export class Application extends LitElement {
         @redo=${this.redo}
       ></eomap-sidebar>
       ${this.renderEditor()}
+      ${LIGHTING_DEMO_URL && !this.mapState.loaded
+        ? html`<button
+            class="lighting-demo"
+            ?disabled=${!this.validGfx()}
+            @click=${this.openLightingDemo}
+          >
+            Open lighting preview
+          </button>`
+        : ""}
       <sp-dropzone
         @sp-dropzone-should-accept=${this.onDropzoneShouldAccept}
         @sp-dropzone-drop=${this.onDropzoneDrop}
       ></sp-dropzone>
       <eomap-palette
+        .lightingActive=${this.selectedTool === "lighting"}
         .gfxLoader=${this.gfxLoader}
         .gfxErrors=${this.gfxErrors}
         .eyedrop=${this.eyedrop}
@@ -541,8 +614,24 @@ export class Application extends LitElement {
         @resize-start=${this.onPaletteResizeStart}
         @resize-end=${this.onPaletteResizeEnd}
         @layer-selected=${this.onSelectedLayerChanged}
+        @lighting-selected=${this.onToolSelected}
         @changedata-selectedDrawID=${this.onSelectedDrawIDChanged}
-      ></eomap-palette>
+      >
+        <eomap-lighting-panel
+          slot="lighting"
+          .mapState=${this.mapState}
+          .toolState=${this.lightingToolState}
+          .gfxLoader=${this.gfxLoader}
+          .revision=${this.lightingRevision}
+          @focusin=${() => {
+            this.lightingInspectorFocused = true;
+          }}
+          @focusout=${() => {
+            this.lightingInspectorFocused = false;
+          }}
+          @lighting-action=${this.onLightingAction}
+        ></eomap-lighting-panel>
+      </eomap-palette>
       <eomap-infobar
         .tilePos=${this.currentPos}
         .zoom=${this.zoom}
@@ -755,15 +844,29 @@ export class Application extends LitElement {
     if (this.mapState.fileHandle === null) {
       await this.saveAs();
     } else {
-      let builder = new EOBuilder();
-      this.mapState.emf.write(builder);
-      let data = builder.build();
+      const state = this.mapState;
+      const mapHandle = state.fileHandle;
+      const filename = state.filename;
       try {
-        await this.mapState.fileHandle.write(data);
-        this.mapState.saved();
-        this.onMapStateChange();
+        // Obtain both destinations before writing either file. A cancelled picker
+        // must not make a partly saved map look clean.
+        if (
+          (state.lightingDirty || state.hasLightingMetadata) &&
+          !state.lightingFileHandle
+        ) {
+          const handle = await this.fileSystemProvider.showSaveFilePicker(
+            this.lightingPickerOptions(),
+          );
+          if (this.mapState !== state || state.fileHandle !== mapHandle) return;
+          state.lightingFileHandle = handle;
+        }
+        await saveMapWithLighting(state);
+        if (this.mapState === state) this.onMapStateChange();
       } catch (e) {
+        if (e.name === "AbortError") return;
+        if (this.mapState !== state || state.fileHandle !== mapHandle) return;
         let onButtonPress = (buttonIndex) => {
+          if (this.mapState !== state || state.fileHandle !== mapHandle) return;
           switch (buttonIndex) {
             case 0:
               this.save();
@@ -777,14 +880,14 @@ export class Application extends LitElement {
         this.showPrompt(
           new PromptState(
             PromptType.Error,
-            `Failed to save ${this.mapState.filename}`,
-            e.message,
+            `Failed to save ${filename}`,
+            `${e.message}\nIf one file was written, the other may still be unsaved. Your changes remain marked as unsaved.`,
             ["Retry", "Save As", "Cancel"],
             onButtonPress,
           ),
         );
 
-        console.error(`Failed to save '${this.mapState.filename}'`, e);
+        console.error(`Failed to save '${filename}'`, e);
       }
     }
   }
@@ -794,11 +897,26 @@ export class Application extends LitElement {
       return;
     }
 
+    const state = this.mapState;
     try {
-      this.mapState.fileHandle =
-        await this.fileSystemProvider.showSaveFilePicker(
-          this.emfPickerOptions(),
-        );
+      const mapHandle = await this.fileSystemProvider.showSaveFilePicker(
+        this.emfPickerOptions(),
+      );
+      if (this.mapState !== state) return;
+      let lightingHandle = null;
+      if (state.lightingDirty || state.hasLightingMetadata) {
+        lightingHandle = await this.fileSystemProvider.showSaveFilePicker({
+          ...this.lightingPickerOptions(),
+          suggestedName:
+            mapHandle.name.replace(/\.emf$/i, "") + ".lighting.json",
+        });
+        if (this.mapState !== state) return;
+      }
+      // Cancelled pickers leave the original pair of destinations intact.
+      state.fileHandle = mapHandle;
+      state.lightingFileHandle = lightingHandle;
+      // This destination pair has no successful save checkpoint yet.
+      state.lastSavedCommand = undefined;
       this.onMapStateChange();
     } catch (e) {
       if (e.name === "AbortError") {
@@ -806,7 +924,179 @@ export class Application extends LitElement {
       }
       throw e;
     }
-    this.save();
+    await this.save();
+  }
+
+  clearLightingPreview(restoreSettings = true) {
+    const scene = this.editor?.game?.scene.getScene("editor");
+    scene?.tools?.get("lighting")?.clearPreview();
+    if (restoreSettings)
+      this.mapState.gameObject?.setLighting(this.mapState.lighting);
+  }
+
+  async openLightingDemo() {
+    const response = await fetch(LIGHTING_DEMO_URL);
+    if (!response.ok)
+      throw new Error("Could not load the local lighting preview.");
+    this.readMap(await response.arrayBuffer());
+    this.mapState.scrollX = -250;
+    this.mapState.scrollY =
+      (this.mapState.emf.width + this.mapState.emf.height) * 8 - 300;
+    this.selectedTool = "lighting";
+  }
+
+  lightingPickerOptions() {
+    return {
+      suggestedName:
+        this.mapState.filename.replace(/\.emf$/i, "") + ".lighting.json",
+      types: [
+        {
+          description: "Map lighting",
+          accept: { "application/json": [".json"] },
+        },
+      ],
+    };
+  }
+
+  async onLightingAction(event) {
+    const { type, value } = event.detail;
+    const state = this.mapState;
+    if (!state.loaded) return;
+    const tool = this.lightingToolState;
+    const selection = tool.selection;
+    const lamp = selectedLight(state.emf, state.lighting, selection);
+    const updateTool = (patch) => {
+      if (this.mapState !== state) return;
+      this.clearLightingPreview();
+      this.lightingToolState = {
+        ...this.lightingToolState,
+        notice: "",
+        ...patch,
+      };
+    };
+    try {
+      switch (type) {
+        case "preview":
+          updateTool({ preview: value });
+          return;
+        case "guides":
+          updateTool({ guides: value });
+          return;
+        case "preset":
+          updateTool({ preset: value, mode: "place", duplicate: null });
+          return;
+        case "place":
+          updateTool({ mode: "place", duplicate: null });
+          return;
+        case "select":
+          updateTool({ mode: "select", duplicate: null });
+          return;
+        case "window-default":
+          if (lamp?.kind !== "window") return;
+          this.clearLightingPreview();
+          this.commandInvoker.finalizeAggregate();
+          this.commandInvoker.add(
+            new LightingCommand(state, withLight(state.lighting, lamp, null)),
+          );
+          updateTool({
+            notice: `${lamp.name} reset. Undo restores your settings.`,
+          });
+          return;
+        case "move":
+          if (lamp && lamp.kind !== "window") updateTool({ mode: "move" });
+          return;
+        case "duplicate":
+          if (lamp && lamp.kind !== "window")
+            updateTool({
+              mode: "place",
+              preset: lamp.id,
+              duplicate: lightSettings(lamp),
+            });
+          return;
+        case "delete": {
+          if (!lamp || lamp.kind === "window") return;
+          this.clearLightingPreview();
+          const next = withLight(state.lighting, lamp, null);
+          this.commandInvoker.finalizeAggregate();
+          this.commandInvoker.add(
+            new LightingCommand(
+              state,
+              next,
+              lamp.kind === "free"
+                ? []
+                : [{ x: lamp.x, y: lamp.y, graphic: null }],
+            ),
+          );
+          updateTool({
+            selection: null,
+            mode: "select",
+            notice:
+              lamp.kind === "free"
+                ? "Free light deleted. Undo restores it."
+                : "Lamp deleted. Undo restores the lamp and its light.",
+          });
+          return;
+        }
+        case "lamp":
+        case "preview-lamp":
+        case "ambient":
+        case "preview-ambient": {
+          if (type.endsWith("lamp") && !lamp) return;
+          // Transition from the currently displayed slider preview directly.
+          // Restoring the baseline first would bake both contributions twice.
+          this.clearLightingPreview(false);
+          const next = type.endsWith("ambient")
+            ? {
+                ...state.lighting,
+                ambient: ambientSettings({
+                  ...state.lighting.ambient,
+                  ...value,
+                }),
+              }
+            : withLight(state.lighting, lamp, { ...lamp, ...value });
+          if (type.startsWith("preview-")) state.gameObject.setLighting(next);
+          else if (JSON.stringify(next) !== JSON.stringify(state.lighting)) {
+            this.commandInvoker.finalizeAggregate();
+            this.commandInvoker.add(new LightingCommand(state, next));
+          } else state.gameObject.setLighting(next);
+          return;
+        }
+        case "load": {
+          const [handle] = await this.fileSystemProvider.showOpenFilePicker(
+            this.lightingPickerOptions(),
+          );
+          const file = await handle.getFile();
+          if (file.size > 4 * 1024 * 1024)
+            throw new Error("Lighting files must be smaller than 4 MB.");
+          const lighting = parseLighting(await file.text(), state.emf);
+          if (this.mapState !== state) return;
+          this.clearLightingPreview();
+          this.commandInvoker.finalizeAggregate();
+          this.commandInvoker.add(new LightingCommand(state, lighting));
+          state.lightingFileHandle = handle;
+          updateTool({
+            notice: "Lighting loaded. Undo restores your previous lighting.",
+          });
+          return;
+        }
+        case "save": {
+          const handle = await this.fileSystemProvider.showSaveFilePicker(
+            this.lightingPickerOptions(),
+          );
+          if (this.mapState !== state) return;
+          if (!(await saveLighting(state, handle)) || this.mapState !== state)
+            return;
+          this.onMapStateChange();
+          updateTool({
+            notice:
+              "Lighting saved. Save the EMF too if you placed or moved lamps.",
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") updateTool({ notice: error.message });
+    }
   }
 
   showNewMap() {
@@ -841,6 +1131,8 @@ export class Application extends LitElement {
   }
 
   onToolSelected(event) {
+    this.clearLightingPreview();
+    this.lightingInspectorFocused = false;
     this.selectedTool = event.detail;
     document.activeElement.blur();
   }
@@ -894,6 +1186,11 @@ export class Application extends LitElement {
   }
 
   onSelectedLayerChanged(event) {
+    if (this.selectedTool === "lighting") {
+      this.clearLightingPreview();
+      this.selectedTool = "draw";
+    }
+    this.lightingInspectorFocused = false;
     this.selectedLayer = event.detail;
     this.layerVisibility = this.layerVisibility.withSelectedLayer(
       this.selectedLayer,
@@ -1006,7 +1303,10 @@ export class Application extends LitElement {
 
   keyboardEnabled() {
     return (
-      !this.hasOpenModal && !this.hasOpenPrompt && !this.hasOpenContextMenu
+      !this.hasOpenModal &&
+      !this.hasOpenPrompt &&
+      !this.hasOpenContextMenu &&
+      !this.lightingInspectorFocused
     );
   }
 

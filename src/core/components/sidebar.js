@@ -34,6 +34,7 @@ const KEYBINDING_MAP = TOOLS.reduce((map, tool) => {
   map.set(new KeybindingState(tool.kbd), tool.key);
   return map;
 }, new Map());
+KEYBINDING_MAP.set(new KeybindingState("L"), "lighting");
 
 @customElement("eomap-sidebar")
 export class Sidebar extends LitElement {

@@ -215,6 +215,16 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
     const xRes = 32;
     const yRes = 32;
 
+    // A hidden palette (for example while the lighting inspector is open) has
+    // no columns. Do not attempt packing with the uninitialized startY sentinel.
+    if (this.width < xRes) {
+      this.renderList.clear();
+      this.sections.length = 0;
+      this._height = 0;
+      this.dirtyLayout = false;
+      return;
+    }
+
     let pageWidth = Math.floor(this.width / xRes);
     let colHeights = new Array(pageWidth).fill(0);
 

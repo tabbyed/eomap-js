@@ -55,6 +55,9 @@ export class Editor extends PhaserInstance {
   @property({ type: MapPropertiesState })
   mapPropertiesState;
 
+  @property({ attribute: false })
+  lightingToolState;
+
   updateZoom = () => {
     // do nothing
   };
@@ -111,6 +114,9 @@ export class Editor extends PhaserInstance {
     this.setupEntityToolEvents(scene);
     this.setupContextMenuEvents(scene);
     this.setupZoomEvents(scene);
+    scene.events.on("lighting-tool-state", (detail) =>
+      this.dispatchEvent(new CustomEvent("lighting-tool-state", { detail })),
+    );
   }
 
   get phaserDataKeys() {
@@ -126,6 +132,7 @@ export class Editor extends PhaserInstance {
       "selectedDrawID",
       "entityState",
       "mapPropertiesState",
+      "lightingToolState",
     ];
   }
 }

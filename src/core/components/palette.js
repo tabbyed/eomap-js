@@ -45,6 +45,18 @@ export class Palette extends PhaserInstance {
           --palette-gutter-width: 4px;
           --palette-gutter-handle-width: calc(var(--palette-gutter-width) * 2);
         }
+        [hidden] {
+          display: none !important;
+        }
+        .lighting-content {
+          min-height: 0;
+          min-width: 0;
+          overflow: hidden;
+        }
+        ::slotted([slot="lighting"]) {
+          height: 100%;
+          width: 100%;
+        }
         @media (pointer: coarse) {
           :host {
             --palette-gutter-handle-width: calc(
@@ -218,6 +230,9 @@ export class Palette extends PhaserInstance {
   @property({ type: Number })
   selectedLayer;
 
+  @property({ type: Boolean })
+  lightingActive = false;
+
   @property({ type: Number })
   selectedDrawID;
 
@@ -320,6 +335,15 @@ export class Palette extends PhaserInstance {
     if (changedProperties.has("width")) {
       this.checkLayerButtonsArrows();
     }
+    if (
+      changedProperties.has("lightingActive") ||
+      changedProperties.has("selectedLayer")
+    ) {
+      const value = this.lightingActive ? "lighting" : this.selectedLayer;
+      this.shadowRoot
+        .querySelector(`sp-action-button[value="${value}"]`)
+        ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
   }
 
   renderLayerButtons() {
@@ -334,14 +358,17 @@ export class Palette extends PhaserInstance {
       "Shadow",
       "Overlay 2",
       "Special",
+      "Lighting",
     ];
 
     return LAYER_NAMES.map((label, i) => {
       return html`
         <sp-action-button
-          value="${i}"
+          value="${label === "Lighting" ? "lighting" : i}"
           tabindex="0"
-          ?selected=${this.selectedLayer === i}
+          ?selected=${label === "Lighting"
+            ? this.lightingActive
+            : !this.lightingActive && this.selectedLayer === i}
           @click=${this.onLayerClick}
         >
           ${label}
@@ -438,6 +465,7 @@ export class Palette extends PhaserInstance {
       </div>
       <div
         id="palette-scroll-container"
+        ?hidden=${this.lightingActive}
         tabindex="-1"
         @scroll=${this.onPaletteContentScroll}
       >
@@ -453,6 +481,9 @@ export class Palette extends PhaserInstance {
           </div>
         </div>
       </div>
+      <div class="lighting-content" ?hidden=${!this.lightingActive}>
+        <slot name="lighting"></slot>
+      </div>
     `;
   }
 
@@ -460,10 +491,12 @@ export class Palette extends PhaserInstance {
     let container = this.paletteScrollContainer;
     if (container) {
       let style = getComputedStyle(container);
-      this.viewportHeight =
+      this.viewportHeight = Math.max(
+        0,
         container.clientHeight -
-        parseFloat(style.paddingTop) -
-        parseFloat(style.paddingBottom);
+          parseFloat(style.paddingTop) -
+          parseFloat(style.paddingBottom),
+      );
     }
   }
 
@@ -549,9 +582,15 @@ export class Palette extends PhaserInstance {
 
   onLayerClick(event) {
     event.preventDefault();
+    if (event.currentTarget.value === "lighting") {
+      this.dispatchEvent(
+        new CustomEvent("lighting-selected", { detail: "lighting" }),
+      );
+      return;
+    }
     this.dispatchEvent(
       new CustomEvent("layer-selected", {
-        detail: parseInt(event.target.value),
+        detail: parseInt(event.currentTarget.value),
       }),
     );
   }

@@ -55,6 +55,7 @@ module.exports = (env) => {
         FORCE_CONNECTED_MODE_URL: JSON.stringify(
           env?.FORCE_CONNECTED_MODE_URL || "",
         ),
+        LIGHTING_DEMO_URL: JSON.stringify(env?.LIGHTING_DEMO_URL || ""),
         NPM_VERSION: JSON.stringify(getVersion()),
         RELEASE_NOTES_URL: JSON.stringify(getReleaseNotesUrl()),
       }),
