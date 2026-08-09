@@ -1,0 +1,3554 @@
+[
+  {
+    "graphic": 474,
+    "resource": 574,
+    "name": "Brick window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[33, 16, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [4, 176, 26, 209],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [19, 176, 26, 187]
+      },
+      {
+        "area": 72,
+        "bounds": [4, 182, 13, 194]
+      },
+      {
+        "area": 63,
+        "bounds": [19, 190, 26, 202]
+      },
+      {
+        "area": 81,
+        "bounds": [4, 196, 13, 209]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 12,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 19,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 26,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 12,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 19,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 26,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 12,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 19,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 26,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 12,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 19,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 26,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 12,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 19,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 26,
+        "y": 54,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 12,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 19,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 26,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 12,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 19,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 26,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 33,
+        "y": 69,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 12,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 19,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 26,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 33,
+        "y": 71,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 52,
+        "y": 72,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 73,
+        "y": 73,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 477,
+    "resource": 577,
+    "name": "Brick window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[41, 25, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [6, 176, 28, 209],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [6, 176, 13, 187]
+      },
+      {
+        "area": 72,
+        "bounds": [19, 182, 28, 194]
+      },
+      {
+        "area": 63,
+        "bounds": [6, 190, 13, 202]
+      },
+      {
+        "area": 81,
+        "bounds": [19, 196, 28, 209]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 33,
+        "y": 26,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 35,
+        "y": 26,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 33,
+        "y": 57,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 35,
+        "y": 57,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 51,
+        "y": 62,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 53,
+        "y": 62,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 33,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 35,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 33,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 35,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 51,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 53,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 33,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 35,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 33,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 35,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 51,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 53,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 33,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 35,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 33,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 35,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 51,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 53,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 33,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 35,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 33,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 35,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 51,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 53,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 33,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 35,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 33,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 35,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 51,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 53,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 16,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 18,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 33,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 35,
+        "y": 17,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 16,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 18,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 33,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 35,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 16,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 18,
+        "y": 32,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 16,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 18,
+        "y": 41,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 33,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 35,
+        "y": 56,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 51,
+        "y": 58,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 53,
+        "y": 58,
+        "layer": 3
+      }
+    ]
+  },
+  {
+    "graphic": 464,
+    "resource": 564,
+    "name": "Brick window",
+    "width": 32,
+    "height": 200,
+    "frames": 1,
+    "glass": [[41, 25, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [6, 128, 28, 161],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [6, 128, 13, 139]
+      },
+      {
+        "area": 72,
+        "bounds": [19, 134, 28, 146]
+      },
+      {
+        "area": 63,
+        "bounds": [6, 142, 13, 154]
+      },
+      {
+        "area": 81,
+        "bounds": [19, 148, 28, 161]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 465,
+    "resource": 565,
+    "name": "Brick window",
+    "width": 32,
+    "height": 200,
+    "frames": 1,
+    "glass": [[33, 16, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [4, 128, 26, 161],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [19, 128, 26, 139]
+      },
+      {
+        "area": 72,
+        "bounds": [4, 134, 13, 146]
+      },
+      {
+        "area": 63,
+        "bounds": [19, 142, 26, 154]
+      },
+      {
+        "area": 81,
+        "bounds": [4, 148, 13, 161]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1555,
+    "resource": 1655,
+    "name": "Brick window",
+    "width": 32,
+    "height": 200,
+    "frames": 1,
+    "glass": [[33, 16, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [4, 128, 26, 161],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [19, 128, 26, 139]
+      },
+      {
+        "area": 72,
+        "bounds": [4, 134, 13, 146]
+      },
+      {
+        "area": 63,
+        "bounds": [19, 142, 26, 154]
+      },
+      {
+        "area": 81,
+        "bounds": [4, 148, 13, 161]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1568,
+    "resource": 1668,
+    "name": "Brick window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[41, 24, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [6, 176, 28, 209],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [6, 176, 13, 187]
+      },
+      {
+        "area": 72,
+        "bounds": [19, 182, 28, 194]
+      },
+      {
+        "area": 63,
+        "bounds": [6, 190, 13, 202]
+      },
+      {
+        "area": 81,
+        "bounds": [19, 196, 28, 209]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1569,
+    "resource": 1669,
+    "name": "Brick window",
+    "width": 32,
+    "height": 200,
+    "frames": 1,
+    "glass": [[41, 24, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [6, 128, 28, 161],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [6, 128, 13, 139]
+      },
+      {
+        "area": 72,
+        "bounds": [19, 134, 28, 146]
+      },
+      {
+        "area": 63,
+        "bounds": [6, 142, 13, 154]
+      },
+      {
+        "area": 81,
+        "bounds": [19, 148, 28, 161]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1576,
+    "resource": 1676,
+    "name": "Brick window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[33, 16, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [4, 176, 26, 209],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [19, 176, 26, 187]
+      },
+      {
+        "area": 72,
+        "bounds": [4, 182, 13, 194]
+      },
+      {
+        "area": 63,
+        "bounds": [19, 190, 26, 202]
+      },
+      {
+        "area": 81,
+        "bounds": [4, 196, 13, 209]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1582,
+    "resource": 1682,
+    "name": "Brick window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[41, 24, 0]],
+    "glassPixels": 272,
+    "glassBoundsExclusive": [6, 176, 28, 209],
+    "panes": [
+      {
+        "area": 56,
+        "bounds": [6, 176, 13, 187]
+      },
+      {
+        "area": 72,
+        "bounds": [19, 182, 28, 194]
+      },
+      {
+        "area": 63,
+        "bounds": [6, 190, 13, 202]
+      },
+      {
+        "area": 81,
+        "bounds": [19, 196, 28, 209]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 351,
+    "resource": 451,
+    "name": "Window",
+    "width": 32,
+    "height": 200,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 102, 26, 149],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [6, 102, 14, 124]
+      },
+      {
+        "area": 141,
+        "bounds": [18, 108, 26, 129]
+      },
+      {
+        "area": 132,
+        "bounds": [6, 123, 14, 143]
+      },
+      {
+        "area": 136,
+        "bounds": [18, 129, 26, 149]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 72,
+        "y": 59,
+        "layer": 3
+      },
+      {
+        "map": "00083.emf",
+        "x": 4,
+        "y": 50,
+        "layer": 3
+      }
+    ]
+  },
+  {
+    "graphic": 354,
+    "resource": 454,
+    "name": "Window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 150, 26, 197],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 150, 26, 172]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 156, 14, 177]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 171, 26, 191]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 177, 14, 197]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 73,
+        "y": 58,
+        "layer": 4
+      },
+      {
+        "map": "00083.emf",
+        "x": 5,
+        "y": 49,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 355,
+    "resource": 455,
+    "name": "Window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 160, 26, 207],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 160, 26, 182]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 166, 14, 187]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 181, 26, 201]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 187, 14, 207]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 356,
+    "resource": 456,
+    "name": "Window",
+    "width": 32,
+    "height": 239,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 141, 26, 188],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 141, 26, 163]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 147, 14, 168]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 162, 26, 182]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 168, 14, 188]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 73,
+        "y": 56,
+        "layer": 4
+      },
+      {
+        "map": "00083.emf",
+        "x": 5,
+        "y": 47,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 431,
+    "resource": 531,
+    "name": "Window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 160, 26, 207],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 160, 26, 182]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 166, 14, 187]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 181, 26, 201]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 187, 14, 207]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 73,
+        "y": 57,
+        "layer": 4
+      },
+      {
+        "map": "00083.emf",
+        "x": 5,
+        "y": 48,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 1583,
+    "resource": 1683,
+    "name": "Window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 160, 26, 207],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 160, 26, 182]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 166, 14, 187]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 181, 26, 201]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 187, 14, 207]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1586,
+    "resource": 1686,
+    "name": "Window",
+    "width": 32,
+    "height": 201,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 103, 26, 150],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [6, 103, 14, 125]
+      },
+      {
+        "area": 141,
+        "bounds": [18, 109, 26, 130]
+      },
+      {
+        "area": 132,
+        "bounds": [6, 124, 14, 144]
+      },
+      {
+        "area": 136,
+        "bounds": [18, 130, 26, 150]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1587,
+    "resource": 1687,
+    "name": "Window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 150, 26, 197],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 150, 26, 172]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 156, 14, 177]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 171, 26, 191]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 177, 14, 197]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 1588,
+    "resource": 1688,
+    "name": "Window",
+    "width": 32,
+    "height": 239,
+    "frames": 1,
+    "glass": [[0, 16, 33]],
+    "glassPixels": 553,
+    "glassBoundsExclusive": [6, 141, 26, 188],
+    "panes": [
+      {
+        "area": 144,
+        "bounds": [18, 141, 26, 163]
+      },
+      {
+        "area": 141,
+        "bounds": [6, 147, 14, 168]
+      },
+      {
+        "area": 132,
+        "bounds": [18, 162, 26, 182]
+      },
+      {
+        "area": 136,
+        "bounds": [6, 168, 14, 188]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 93,
+    "resource": 193,
+    "name": "Timber window",
+    "width": 32,
+    "height": 201,
+    "frames": 1,
+    "glass": [[41, 24, 0]],
+    "glassPixels": 320,
+    "glassBoundsExclusive": [6, 126, 28, 160],
+    "panes": [
+      {
+        "area": 70,
+        "bounds": [6, 126, 13, 139]
+      },
+      {
+        "area": 90,
+        "bounds": [19, 132, 28, 146]
+      },
+      {
+        "area": 70,
+        "bounds": [6, 140, 13, 153]
+      },
+      {
+        "area": 90,
+        "bounds": [19, 146, 28, 160]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00002.emf",
+        "x": 4,
+        "y": 43,
+        "layer": 3
+      },
+      {
+        "map": "00005.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 62,
+        "y": 27,
+        "layer": 3
+      },
+      {
+        "map": "00013.emf",
+        "x": 12,
+        "y": 16,
+        "layer": 3
+      },
+      {
+        "map": "00048.emf",
+        "x": 17,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00048.emf",
+        "x": 24,
+        "y": 14,
+        "layer": 3
+      },
+      {
+        "map": "00048.emf",
+        "x": 5,
+        "y": 20,
+        "layer": 3
+      },
+      {
+        "map": "00048.emf",
+        "x": 11,
+        "y": 23,
+        "layer": 3
+      },
+      {
+        "map": "00048.emf",
+        "x": 35,
+        "y": 24,
+        "layer": 3
+      },
+      {
+        "map": "00186.emf",
+        "x": 8,
+        "y": 10,
+        "layer": 3
+      },
+      {
+        "map": "00232.emf",
+        "x": 7,
+        "y": 4,
+        "layer": 3
+      }
+    ]
+  },
+  {
+    "graphic": 96,
+    "resource": 196,
+    "name": "Timber window",
+    "width": 32,
+    "height": 249,
+    "frames": 1,
+    "glass": [[41, 24, 0]],
+    "glassPixels": 320,
+    "glassBoundsExclusive": [4, 175, 26, 209],
+    "panes": [
+      {
+        "area": 70,
+        "bounds": [19, 175, 26, 188]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 181, 13, 195]
+      },
+      {
+        "area": 70,
+        "bounds": [19, 189, 26, 202]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 195, 13, 209]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00002.emf",
+        "x": 5,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00002.emf",
+        "x": 5,
+        "y": 42,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 63,
+        "y": 26,
+        "layer": 4
+      },
+      {
+        "map": "00013.emf",
+        "x": 13,
+        "y": 15,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 12,
+        "y": 22,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 36,
+        "y": 23,
+        "layer": 4
+      },
+      {
+        "map": "00186.emf",
+        "x": 9,
+        "y": 9,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 99,
+    "resource": 199,
+    "name": "Timber window",
+    "width": 32,
+    "height": 240,
+    "frames": 1,
+    "glass": [[41, 24, 0]],
+    "glassPixels": 320,
+    "glassBoundsExclusive": [4, 166, 26, 200],
+    "panes": [
+      {
+        "area": 70,
+        "bounds": [19, 166, 26, 179]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 172, 13, 186]
+      },
+      {
+        "area": 70,
+        "bounds": [19, 180, 26, 193]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 186, 13, 200]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00002.emf",
+        "x": 5,
+        "y": 37,
+        "layer": 4
+      },
+      {
+        "map": "00005.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 63,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00013.emf",
+        "x": 13,
+        "y": 10,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 18,
+        "y": 10,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 25,
+        "y": 10,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 6,
+        "y": 18,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 12,
+        "y": 18,
+        "layer": 4
+      },
+      {
+        "map": "00048.emf",
+        "x": 36,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00186.emf",
+        "x": 9,
+        "y": 6,
+        "layer": 4
+      },
+      {
+        "map": "00232.emf",
+        "x": 8,
+        "y": 3,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 116,
+    "resource": 216,
+    "name": "Timber window",
+    "width": 32,
+    "height": 249,
+    "frames": 1,
+    "glass": [[41, 25, 0]],
+    "glassPixels": 320,
+    "glassBoundsExclusive": [4, 175, 26, 209],
+    "panes": [
+      {
+        "area": 70,
+        "bounds": [19, 175, 26, 188]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 181, 13, 195]
+      },
+      {
+        "area": 70,
+        "bounds": [19, 189, 26, 202]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 195, 13, 209]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 438,
+    "resource": 538,
+    "name": "Timber window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[41, 25, 0]],
+    "glassPixels": 320,
+    "glassBoundsExclusive": [4, 162, 26, 196],
+    "panes": [
+      {
+        "area": 70,
+        "bounds": [19, 162, 26, 175]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 168, 13, 182]
+      },
+      {
+        "area": 70,
+        "bounds": [19, 176, 26, 189]
+      },
+      {
+        "area": 90,
+        "bounds": [4, 182, 13, 196]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00019.emf",
+        "x": 17,
+        "y": 5,
+        "layer": 4
+      },
+      {
+        "map": "00019.emf",
+        "x": 31,
+        "y": 5,
+        "layer": 4
+      },
+      {
+        "map": "00019.emf",
+        "x": 39,
+        "y": 5,
+        "layer": 4
+      },
+      {
+        "map": "00019.emf",
+        "x": 5,
+        "y": 18,
+        "layer": 4
+      },
+      {
+        "map": "00019.emf",
+        "x": 45,
+        "y": 20,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 33,
+        "y": 5,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 22,
+        "y": 6,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 33,
+        "y": 6,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 39,
+        "y": 6,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 5,
+        "y": 17,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 4,
+        "y": 44,
+        "layer": 4
+      },
+      {
+        "map": "00077.emf",
+        "x": 10,
+        "y": 44,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 46,
+    "resource": 146,
+    "name": "Cottage window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[16, 16, 16]],
+    "glassPixels": 273,
+    "glassBoundsExclusive": [3, 184, 16, 213],
+    "panes": [
+      {
+        "area": 143,
+        "bounds": [3, 184, 16, 201]
+      },
+      {
+        "area": 130,
+        "bounds": [3, 197, 16, 213]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00029.emf",
+        "x": 24,
+        "y": 15,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 14,
+        "y": 18,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 34,
+        "y": 18,
+        "layer": 4
+      },
+      {
+        "map": "00039.emf",
+        "x": 9,
+        "y": 45,
+        "layer": 4
+      },
+      {
+        "map": "00039.emf",
+        "x": 17,
+        "y": 45,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 53,
+    "resource": 153,
+    "name": "Cottage window",
+    "width": 32,
+    "height": 248,
+    "frames": 1,
+    "glass": [[16, 16, 16]],
+    "glassPixels": 273,
+    "glassBoundsExclusive": [16, 184, 29, 213],
+    "panes": [
+      {
+        "area": 143,
+        "bounds": [16, 184, 29, 201]
+      },
+      {
+        "area": 130,
+        "bounds": [16, 197, 29, 213]
+      }
+    ],
+    "occurrences": []
+  },
+  {
+    "graphic": 62,
+    "resource": 162,
+    "name": "Cottage window",
+    "width": 32,
+    "height": 212,
+    "frames": 1,
+    "glass": [[16, 16, 16]],
+    "glassPixels": 273,
+    "glassBoundsExclusive": [16, 148, 29, 177],
+    "panes": [
+      {
+        "area": 143,
+        "bounds": [16, 148, 29, 165]
+      },
+      {
+        "area": 130,
+        "bounds": [16, 161, 29, 177]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00029.emf",
+        "x": 35,
+        "y": 33,
+        "layer": 3
+      },
+      {
+        "map": "00029.emf",
+        "x": 35,
+        "y": 39,
+        "layer": 3
+      }
+    ]
+  },
+  {
+    "graphic": 3,
+    "resource": 103,
+    "name": "Arched window",
+    "width": 32,
+    "height": 257,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 275,
+    "glassBoundsExclusive": [25, 171, 32, 218],
+    "panes": [
+      {
+        "area": 132,
+        "bounds": [25, 171, 32, 194]
+      },
+      {
+        "area": 143,
+        "bounds": [25, 195, 32, 218]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 31,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 31,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 31,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 31,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 31,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 31,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 31,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00029.emf",
+        "x": 12,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00104.emf",
+        "x": 7,
+        "y": 11,
+        "layer": 3
+      },
+      {
+        "map": "00151.emf",
+        "x": 62,
+        "y": 50,
+        "layer": 3
+      }
+    ]
+  },
+  {
+    "graphic": 5,
+    "resource": 105,
+    "name": "Arched window",
+    "width": 32,
+    "height": 384,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 275,
+    "glassBoundsExclusive": [25, 298, 32, 345],
+    "panes": [
+      {
+        "area": 132,
+        "bounds": [25, 298, 32, 321]
+      },
+      {
+        "area": 143,
+        "bounds": [25, 322, 32, 345]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 33,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 33,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 33,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 33,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 33,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 33,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 33,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00029.emf",
+        "x": 14,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00104.emf",
+        "x": 9,
+        "y": 11,
+        "layer": 3
+      },
+      {
+        "map": "00151.emf",
+        "x": 64,
+        "y": 50,
+        "layer": 3
+      }
+    ]
+  },
+  {
+    "graphic": 9,
+    "resource": 109,
+    "name": "Arched window",
+    "width": 32,
+    "height": 384,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 106,
+    "glassBoundsExclusive": [23, 309, 28, 338],
+    "panes": [
+      {
+        "area": 61,
+        "bounds": [23, 309, 28, 326]
+      },
+      {
+        "area": 45,
+        "bounds": [23, 327, 28, 338]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 36,
+        "y": 37,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 36,
+        "y": 39,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 36,
+        "y": 39,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 36,
+        "y": 39,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 36,
+        "y": 39,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 36,
+        "y": 39,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 36,
+        "y": 39,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 17,
+        "y": 37,
+        "layer": 4
+      },
+      {
+        "map": "00104.emf",
+        "x": 12,
+        "y": 11,
+        "layer": 4
+      },
+      {
+        "map": "00151.emf",
+        "x": 67,
+        "y": 50,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 13,
+    "resource": 113,
+    "name": "Arched window",
+    "width": 32,
+    "height": 127,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 182,
+    "glassBoundsExclusive": [0, 67, 13, 96],
+    "panes": [
+      {
+        "area": 57,
+        "bounds": [7, 67, 13, 80]
+      },
+      {
+        "area": 41,
+        "bounds": [0, 68, 3, 84]
+      },
+      {
+        "area": 57,
+        "bounds": [7, 81, 13, 93]
+      },
+      {
+        "area": 27,
+        "bounds": [0, 86, 3, 96]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 36,
+        "y": 33,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 36,
+        "y": 35,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 36,
+        "y": 35,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 36,
+        "y": 35,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 36,
+        "y": 35,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 36,
+        "y": 35,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 36,
+        "y": 35,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 17,
+        "y": 33,
+        "layer": 4
+      },
+      {
+        "map": "00104.emf",
+        "x": 12,
+        "y": 7,
+        "layer": 4
+      },
+      {
+        "map": "00151.emf",
+        "x": 67,
+        "y": 46,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 12,
+    "resource": 112,
+    "name": "Wall lantern",
+    "width": 32,
+    "height": 159,
+    "frames": 1,
+    "glass": [
+      [148, 115, 49],
+      [148, 115, 66],
+      [148, 115, 82],
+      [173, 132, 66],
+      [173, 132, 74],
+      [173, 132, 82],
+      [173, 132, 99],
+      [173, 140, 99]
+    ],
+    "glassPixels": 30,
+    "glassBoundsExclusive": [3, 105, 11, 111],
+    "panes": [
+      {
+        "area": 15,
+        "bounds": [3, 105, 6, 111]
+      },
+      {
+        "area": 15,
+        "bounds": [8, 105, 11, 111]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 36,
+        "y": 34,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 17,
+        "y": 34,
+        "layer": 4
+      },
+      {
+        "map": "00104.emf",
+        "x": 12,
+        "y": 8,
+        "layer": 4
+      },
+      {
+        "map": "00151.emf",
+        "x": 67,
+        "y": 47,
+        "layer": 4
+      }
+    ]
+  },
+  {
+    "graphic": 4,
+    "resource": 104,
+    "part": {
+      "owner": 3,
+      "dx": -1,
+      "dy": 0
+    },
+    "width": 32,
+    "height": 320,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 476,
+    "glassBoundsExclusive": [0, 218, 15, 273],
+    "panes": [
+      {
+        "area": 23,
+        "bounds": [0, 218, 1, 241]
+      },
+      {
+        "area": 232,
+        "bounds": [5, 220, 15, 249]
+      },
+      {
+        "area": 21,
+        "bounds": [0, 245, 1, 266]
+      },
+      {
+        "area": 200,
+        "bounds": [5, 248, 15, 273]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 32,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 32,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 32,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 32,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 32,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 32,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 32,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00029.emf",
+        "x": 13,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00104.emf",
+        "x": 8,
+        "y": 11,
+        "layer": 3
+      },
+      {
+        "map": "00151.emf",
+        "x": 63,
+        "y": 50,
+        "layer": 3
+      }
+    ],
+    "unpaired": []
+  },
+  {
+    "graphic": 6,
+    "resource": 106,
+    "part": {
+      "owner": 5,
+      "dx": -1,
+      "dy": 0
+    },
+    "width": 32,
+    "height": 515,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 476,
+    "glassBoundsExclusive": [0, 413, 15, 468],
+    "panes": [
+      {
+        "area": 23,
+        "bounds": [0, 413, 1, 436]
+      },
+      {
+        "area": 232,
+        "bounds": [5, 415, 15, 444]
+      },
+      {
+        "area": 21,
+        "bounds": [0, 440, 1, 461]
+      },
+      {
+        "area": 200,
+        "bounds": [5, 443, 15, 468]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 34,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00005c.emf",
+        "x": 34,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 34,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 34,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005e.emf",
+        "x": 34,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005h.emf",
+        "x": 34,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00005s.emf",
+        "x": 34,
+        "y": 39,
+        "layer": 3
+      },
+      {
+        "map": "00029.emf",
+        "x": 15,
+        "y": 37,
+        "layer": 3
+      },
+      {
+        "map": "00104.emf",
+        "x": 10,
+        "y": 11,
+        "layer": 3
+      },
+      {
+        "map": "00151.emf",
+        "x": 65,
+        "y": 50,
+        "layer": 3
+      }
+    ],
+    "unpaired": []
+  },
+  {
+    "graphic": 10,
+    "resource": 110,
+    "part": {
+      "owner": 9,
+      "dx": 0,
+      "dy": 1
+    },
+    "width": 32,
+    "height": 320,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 114,
+    "glassBoundsExclusive": [0, 260, 6, 286],
+    "panes": [
+      {
+        "area": 57,
+        "bounds": [0, 260, 6, 273]
+      },
+      {
+        "area": 57,
+        "bounds": [0, 274, 6, 286]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 36,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 36,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 36,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 36,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 36,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 36,
+        "y": 38,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 17,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00104.emf",
+        "x": 12,
+        "y": 10,
+        "layer": 4
+      },
+      {
+        "map": "00151.emf",
+        "x": 67,
+        "y": 49,
+        "layer": 4
+      }
+    ],
+    "unpaired": []
+  },
+  {
+    "graphic": 12,
+    "resource": 112,
+    "part": {
+      "owner": 13,
+      "dx": 0,
+      "dy": -1
+    },
+    "width": 32,
+    "height": 159,
+    "frames": 1,
+    "glass": [
+      [107, 74, 41],
+      [123, 90, 58],
+      [132, 99, 66],
+      [132, 99, 74],
+      [140, 99, 66],
+      [140, 99, 74],
+      [140, 107, 66],
+      [140, 107, 74],
+      [140, 107, 82],
+      [148, 107, 66],
+      [148, 107, 74],
+      [148, 107, 82],
+      [148, 123, 66],
+      [148, 123, 74],
+      [148, 123, 82],
+      [148, 123, 90],
+      [156, 123, 74],
+      [156, 123, 82],
+      [156, 123, 90],
+      [156, 132, 74],
+      [156, 132, 90],
+      [156, 132, 99],
+      [165, 132, 99],
+      [165, 140, 99],
+      [165, 140, 107]
+    ],
+    "glassPixels": 18,
+    "glassBoundsExclusive": [31, 92, 32, 113],
+    "panes": [
+      {
+        "area": 9,
+        "bounds": [31, 92, 32, 101]
+      },
+      {
+        "area": 9,
+        "bounds": [31, 104, 32, 113]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00005.emf",
+        "x": 36,
+        "y": 34,
+        "layer": 4
+      },
+      {
+        "map": "00005c.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005ch.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005christmas.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005e.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005h.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00005s.emf",
+        "x": 36,
+        "y": 36,
+        "layer": 4
+      },
+      {
+        "map": "00029.emf",
+        "x": 17,
+        "y": 34,
+        "layer": 4
+      },
+      {
+        "map": "00104.emf",
+        "x": 12,
+        "y": 8,
+        "layer": 4
+      },
+      {
+        "map": "00151.emf",
+        "x": 67,
+        "y": 47,
+        "layer": 4
+      }
+    ],
+    "unpaired": []
+  }
+]
