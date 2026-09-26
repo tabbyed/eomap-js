@@ -7,6 +7,71 @@
 
 An Endless Map File (EMF) editor written in JavaScript.
 
+## Lighting preview
+
+The `lighting` branch adds **Lighting** beside **Special** in the layer palette (shortcut **L**). Native street lamps, tall lamps, lanterns, garden lanterns, 30 window styles and the church's wall lantern light up automatically. You can add lamps or free lights, tune any light, and save the result to a companion `.lighting.json` file. The EMF itself never changes. Lighting is an editor preview for now; EOWeb integration is still to come.
+
+### How to use it
+
+**Place and tune a light.** Click a lamp's base to select an existing one. To add one, choose a light, move over the map to preview it live, then click an empty tile. Tune its reach, brightness, glow and colour. Every edit is undoable.
+
+![Selecting a garden lantern, then placing a new one and widening its reach](docs/images/lighting/lighting-howto-place.gif)
+
+**Lights and walls.** A **Free light** lights any tile without adding a graphic. Outside a building, the wall face catches the light. Once the source is inside, the wall keeps the light in. **Source height** lifts the lit patch up the wall, and **Block light at walls** lets one light ignore walls.
+
+![A free light moving from the grass into a church and back, then raised and allowed through walls](docs/images/lighting/lighting-howto-walls.gif)
+
+**Windows and wall lanterns.** Choose **Select** and click the glass. Either half of a window split across two wall pieces selects the same window. **Pane glow** lights the glass and **Outside spill** the ground outside; a lantern has the same controls under lantern names. **Light guides** outlines every recognised window and shows each lamp's reach, with the selected light drawn at full strength.
+
+![Toggling light guides, switching a church window off and on, and brightening the wall lantern](docs/images/lighting/lighting-howto-windows.gif)
+
+**Scene atmosphere** sets Day, Dusk or Night ambient light. **Load lighting…** and **Save lighting…** read and write the companion file.
+
+### How it works
+
+- **A cached light field.** Every light adds its colour into a grid holding one value per tile at 19 heights, 32 px apart. Shading samples that grid instead of looping over lights, and changing one light recomputes only the tiles it reaches.
+- **Walls are edges, not tiles.** A Down wall lies on the edge between its tile and the next row (`y + ½`); a Right wall on the edge to the next column (`x + ½`). Light can reach one side of a wall without entering the other, so a street can be lit while the room behind stays dark.
+- **Walls block light by ray casting.** Each light casts 512 rays across that grid of edges. A ray stops at the first recognised solid wall, checking both edges at corners so light cannot slip through diagonally. Only curated native building walls block; fences and decorations let light through.
+- **Walls are lit as one surface.** Each wall sprite is shaded in horizontal strips that sample the field on the wall's outside face at their real height. A raised light lights the wall higher up, and neighbouring wall pieces meet without seams.
+- **Wall edits update live.** Adding, removing or replacing a wall re-traces only the lights whose reach touches it.
+- **Windows and lanterns are part of the wall art.** Their glass is picked out by exact colours inside a small box, so frames and bricks never glow. Each shines outward from its face only, and its wall still blocks light.
+
+Roof surfaces, finite-height blockers and custom graphics still need explicit geometry metadata. Preview shading requires WebGL. For how we got here, see [Some thoughts on lighting](docs/some-thoughts-on-lighting.md).
+
+<details>
+<summary>More examples</summary>
+
+A lamp's **Bulb glow** switches off and on while its amber ground pool stays lit:
+
+![Bulb emission and amber halo, independently adjustable from the ground light](docs/images/lighting/bulb-glow.gif)
+
+Per-piece wall shading compared with continuous surface shading on the same building:
+
+![Before and after correcting wall lighting seams](docs/images/lighting/wall-continuity.gif)
+
+Raising a free source from 0 to 128 pixels leaves its ground anchor fixed:
+
+![Free light source height changing beside a wall](docs/images/lighting/source-height.gif)
+
+One window switches off and on while its neighbour and a street lamp stay lit:
+
+![Independent lighting for a window embedded in native wall artwork](docs/images/lighting/window-lighting.gif)
+
+</details>
+
+### Try it
+
+To preview with your own native graphics and an optional local map:
+
+```sh
+npm ci
+node scripts/lighting-dev-server.cjs /path/to/gfx /path/to/map.emf
+```
+
+Open `http://127.0.0.1:4174/` and choose **Open lighting preview**. The helper serves your supplied graphics locally; it does not bundle them into this repository. Without the optional map argument, use the normal map-open flow.
+
+Run the lighting checks with `npm run test:lighting` and CPU benchmarks with `npm run benchmark:lighting`. `node scripts/audit-window-assets.cjs --gfx /path/to/gfx --maps /path/to/maps` verifies the window catalogue against your graphics and maps.
+
 ## Requirements
 
 [Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
