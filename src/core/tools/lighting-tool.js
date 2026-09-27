@@ -18,6 +18,11 @@ import { windowGlassSprites } from "../lighting/model/windows.js";
 import { Layer } from "../data/layer.js";
 import { LightKind } from "../lighting/model/light-kind.js";
 
+const sameParts = (parts, previous) =>
+  previous !== null &&
+  parts.length === previous.length &&
+  parts.every((part, index) => part === previous[index]);
+
 const LAMP_GUIDE = 0xf6c777;
 const WINDOW_GUIDE = 0x98ddff;
 const INVALID_GUIDE = 0xff8585;
@@ -26,7 +31,10 @@ export class LightingTool extends Tool {
   constructor(scene) {
     super();
     this.scene = scene;
-    this.guide = scene.add.graphics().setDepth(2);
+    // Guides for everything in view, and for the light under the pointer
+    // while one is placed or moved. Each redraws only when its inputs change.
+    this.viewGuides = scene.add.graphics().setDepth(2);
+    this.cursorGuide = scene.add.graphics().setDepth(2);
     this.ghost = scene.add
       .image(0, 0, "__DEFAULT")
       .setDepth(2)
@@ -41,7 +49,8 @@ export class LightingTool extends Tool {
       .setVisible(false);
     this.previewLight = null;
     this.cacheEntry = null;
-    this.signature = "";
+    this.viewSignature = null;
+    this.cursorSignature = null;
     scene.events.once("shutdown", () => this.dispose());
   }
 
@@ -202,12 +211,12 @@ export class LightingTool extends Tool {
     return camera.matrix.transformPoint(x - camera.scrollX, y - camera.scrollY);
   }
 
-  drawGlassOutline(graphic, texture, width, alpha) {
+  drawGlassOutline(guides, graphic, texture, width, alpha) {
     const map = this.scene.map;
     const origin = this.worldToScreen(graphic.x, graphic.y);
-    this.guide.lineStyle(width, WINDOW_GUIDE, alpha);
+    guides.lineStyle(width, WINDOW_GUIDE, alpha);
     for (const [x1, y1, x2, y2] of texture.outline) {
-      this.guide.lineBetween(
+      guides.lineBetween(
         origin.x + x1 * map.zoom,
         origin.y + y1 * map.zoom,
         origin.x + x2 * map.zoom,
@@ -225,7 +234,7 @@ export class LightingTool extends Tool {
         map.tileGraphics[map.getTileGraphicIndex(x, y, window.layer)];
       const texture = map.lighting.textures.getWindow(spec);
       if (graphic && texture && map.renderList.includes(graphic))
-        this.drawGlassOutline(graphic, texture, 2, 1);
+        this.drawGlassOutline(this.viewGuides, graphic, texture, 2, 1);
     }
   }
 
@@ -238,49 +247,55 @@ export class LightingTool extends Tool {
       if (graphic.layer === Layer.Objects) {
         const light = lampAt(map.emf, settings, graphic.tileX, graphic.tileY);
         if (light)
-          this.drawSourceGuide(light, LAMP_GUIDE, light.enabled ? 0.6 : 0.3);
+          this.drawSourceGuide(
+            this.viewGuides,
+            light,
+            LAMP_GUIDE,
+            light.enabled ? 0.6 : 0.3,
+          );
         continue;
       }
       for (const { spec } of map.lighting.windowGlass(graphic)) {
         const texture = map.lighting.textures.getWindow(spec);
-        if (texture) this.drawGlassOutline(graphic, texture, 1.5, 0.6);
+        if (texture)
+          this.drawGlassOutline(this.viewGuides, graphic, texture, 1.5, 0.6);
       }
     }
   }
 
   // Ground reach ring, a stem to the source and brackets around the bulb.
-  drawSourceGuide(light, color, alpha) {
+  drawSourceGuide(guides, light, color, alpha) {
     const map = this.scene.map;
     const projected = projectLight(light);
     const point = this.worldToScreen(projected.x, projected.groundY);
     const source = this.worldToScreen(projected.x, projected.sourceY);
     const groundRadius = lightGroundRadius(light);
-    this.guide.lineStyle(1.5, color, 0.75 * alpha);
+    guides.lineStyle(1.5, color, 0.75 * alpha);
     if (groundRadius > 0) {
       // Ground cross-section of the light's reach, before wall occlusion.
-      this.guide.strokeEllipse(
+      guides.strokeEllipse(
         point.x,
         point.y,
         groundRadius * 64 * Math.SQRT2 * map.zoom,
         groundRadius * 32 * Math.SQRT2 * map.zoom,
       );
     }
-    this.guide.strokeCircle(point.x, point.y, 3);
+    guides.strokeCircle(point.x, point.y, 3);
     if (source.y !== point.y) {
-      this.guide.lineStyle(1, color, 0.35 * alpha);
-      this.guide.lineBetween(source.x, source.y, point.x, point.y);
+      guides.lineStyle(1, color, 0.35 * alpha);
+      guides.lineBetween(source.x, source.y, point.x, point.y);
     }
     // Brackets leave the bulb visible instead of drawing a cross over it.
-    this.guide.lineStyle(1.5, color, alpha);
+    guides.lineStyle(1.5, color, alpha);
     for (const dx of [-1, 1]) {
       for (const dy of [-1, 1]) {
-        this.guide.lineBetween(
+        guides.lineBetween(
           source.x + dx * 6,
           source.y + dy * 9,
           source.x + dx * 9,
           source.y + dy * 9,
         );
-        this.guide.lineBetween(
+        guides.lineBetween(
           source.x + dx * 9,
           source.y + dy * 6,
           source.x + dx * 9,
@@ -323,14 +338,19 @@ export class LightingTool extends Tool {
       for (let x = minX; x <= maxX; x++) {
         const light = freeLightAt(map.emf, settings, x, y);
         if (!light) continue;
-        this.drawSourceGuide(light, LAMP_GUIDE, light.enabled ? 0.6 : 0.3);
+        this.drawSourceGuide(
+          this.viewGuides,
+          light,
+          LAMP_GUIDE,
+          light.enabled ? 0.6 : 0.3,
+        );
         // Free lights have no graphic: the marker is what the user clicks.
         const p = this.worldToScreen(
           x * 32 - y * 32 + 32,
           x * 16 + y * 16 + 16,
         );
-        this.guide.lineStyle(2, WINDOW_GUIDE, 1);
-        this.guide.strokeRect(p.x - 4, p.y - 4, 8, 8);
+        this.viewGuides.lineStyle(2, WINDOW_GUIDE, 1);
+        this.viewGuides.strokeRect(p.x - 4, p.y - 4, 8, 8);
       }
   }
 
@@ -341,12 +361,11 @@ export class LightingTool extends Tool {
     const active = scene.selectedTool === "lighting";
     const map = scene.map;
     const settings = map.lighting.settings || scene.mapState.lighting;
-    const signature = [
+    const placing = active && state.mode !== "select";
+    // References are compared too, so inspector edits invalidate the guides.
+    const view = [
       active,
       state,
-      scene.currentPos.x,
-      scene.currentPos.y,
-      scene.currentPos.valid,
       map.scrollX,
       map.scrollY,
       map.zoom,
@@ -357,35 +376,57 @@ export class LightingTool extends Tool {
       map.layerVisibility,
       map.renderList,
       map.lighting.textures?.revision,
-      this.cacheEntry?.loadingComplete === null,
     ];
-    // References are compared too, so inspector edits invalidate the guide.
-    if (
-      this.signature &&
-      signature.every((part, index) => part === this.signature[index])
-    )
-      return false;
-    this.signature = signature;
+    // The pointer matters only while a light is placed or moved, so moving
+    // it otherwise redraws nothing, and while placing it redraws one guide
+    // rather than every guide in view.
+    const cursor = placing
+      ? [
+          scene.currentPos.x,
+          scene.currentPos.y,
+          scene.currentPos.valid,
+          this.cacheEntry?.loadingComplete === null,
+        ]
+      : [];
+    const viewChanged = !sameParts(view, this.viewSignature);
+    if (!viewChanged && sameParts(cursor, this.cursorSignature)) return false;
+    if (viewChanged) {
+      this.viewSignature = view;
+      this.drawView(state, settings, active);
+    }
+    this.cursorSignature = cursor;
+    this.drawCursor(state, settings, placing);
+    return true;
+  }
+
+  // Faint guides for every lamp, window and free light in view, and the
+  // selected light at full strength. Visits the visible graphics: O(V).
+  drawView(state, settings, active) {
+    this.viewGuides.clear();
+    if (!active || !state.guides) return;
+    this.drawOverview(settings);
+    this.drawFreeLightMarkers(settings);
+    if (state.mode !== "select") return;
+    const light = selectedLight(this.scene.emf, settings, state.selection);
+    if (light?.kind === LightKind.Window) this.drawWindowGuide(light);
+    else if (light) this.drawSourceGuide(this.viewGuides, light, LAMP_GUIDE, 1);
+  }
+
+  // The light a click would place: a ghost of its graphic, its guide, and
+  // its light previewed in the field.
+  drawCursor(state, settings, placing) {
+    const scene = this.scene,
+      map = scene.map;
     this.clearPreview();
-    this.guide.clear();
+    this.cursorGuide.clear();
     this.ghost.setVisible(false);
     this.ghostHalo.setVisible(false);
     this.ghostBulb.setVisible(false);
-    if (!active) return true;
-    if (state.guides) {
-      this.drawOverview(settings);
-      this.drawFreeLightMarkers(settings);
-    }
-
+    if (!placing) return;
     let light = selectedLight(scene.emf, settings, state.selection);
-    if (light?.kind === LightKind.Window && state.mode === "select") {
-      if (state.guides) this.drawWindowGuide(light);
-      return true;
-    }
     const movedLight = state.mode === "move" ? light : null;
-    const placing = state.mode !== "select";
     let valid = false;
-    if (placing && scene.currentPos.valid) {
+    if (scene.currentPos.valid) {
       const preset =
         state.mode === "move"
           ? light
@@ -466,13 +507,13 @@ export class LightingTool extends Tool {
         }
       }
     }
-    if (!light || (!state.guides && !placing)) return true;
-    this.drawSourceGuide(
-      light,
-      placing && !valid ? INVALID_GUIDE : LAMP_GUIDE,
-      1,
-    );
-    return true;
+    if (light)
+      this.drawSourceGuide(
+        this.cursorGuide,
+        light,
+        valid ? LAMP_GUIDE : INVALID_GUIDE,
+        1,
+      );
   }
 
   dispose() {

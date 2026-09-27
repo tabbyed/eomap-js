@@ -196,3 +196,58 @@ for (const kind of ["free", "lamp"]) {
     assert.equal(field.sources.size, 2);
   });
 }
+
+test("moving the pointer redraws only the placement guide, and nothing while selecting", () => {
+  const { scene } = fixture("lamp");
+  scene.map.renderList = [];
+  scene.map.camera.getWorldPoint = (x, y) => ({ x, y });
+  // Count how often each guide layer is cleared, in creation order: the
+  // view guides, then the cursor guide.
+  const layers = [];
+  scene.add.graphics = () => {
+    const layer = drawingStub();
+    layer.clears = 0;
+    layer.clear = () => {
+      layer.clears++;
+      return layer;
+    };
+    layers.push(layer);
+    return layer;
+  };
+  const tool = new LightingTool(scene);
+  const [view, cursor] = layers;
+  let state = {
+    mode: "select",
+    preset: "street",
+    selection: { ...origin, kind: "lamp" },
+    preview: true,
+    guides: true,
+  };
+  scene.data = { get: () => state };
+  const move = (x, y) => {
+    scene.currentPos = { x, y, valid: true };
+    return tool.update();
+  };
+
+  assert.equal(move(1, 1), true);
+  assert.deepEqual([view.clears, cursor.clears], [1, 1]);
+  assert.equal(move(2, 1), false, "selecting ignores the pointer");
+  assert.equal(move(3, 2), false);
+  assert.deepEqual([view.clears, cursor.clears], [1, 1]);
+
+  state = { ...state, mode: "place", preset: "free" };
+  assert.equal(move(4, 4), true);
+  assert.deepEqual([view.clears, cursor.clears], [2, 2]);
+  assert.equal(move(5, 4), true);
+  assert.equal(move(6, 4), true);
+  assert.deepEqual(
+    [view.clears, cursor.clears],
+    [2, 4],
+    "placing redraws the cursor guide alone",
+  );
+
+  // Panning still redraws everything in view.
+  scene.map.scrollX += 10;
+  assert.equal(tool.update(), true);
+  assert.deepEqual([view.clears, cursor.clears], [3, 5]);
+});
