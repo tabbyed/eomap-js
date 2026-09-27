@@ -1,4 +1,5 @@
 import { ASSET_PACK } from "../packs/index.js";
+import { Layer } from "../../data/layer.js";
 
 // Graphics that block light; see the pack catalogue for how they were chosen.
 export const SOLID_WALL_GRAPHICS = new Set(ASSET_PACK.solidWalls);
@@ -30,8 +31,12 @@ export class WallGrid {
   update(x, y) {
     const tile = this.emf.getTile(x, y),
       index = y * this.width + x;
-    this.down[index] = SOLID_WALL_GRAPHICS.has(tile.gfx[3]) ? 1 : 0;
-    this.right[index] = SOLID_WALL_GRAPHICS.has(tile.gfx[4]) ? 1 : 0;
+    this.down[index] = SOLID_WALL_GRAPHICS.has(tile.gfx[Layer.DownWall])
+      ? 1
+      : 0;
+    this.right[index] = SOLID_WALL_GRAPHICS.has(tile.gfx[Layer.RightWall])
+      ? 1
+      : 0;
   }
 
   edge(x, y, dx, dy) {

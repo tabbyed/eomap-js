@@ -11,6 +11,7 @@ import {
   wallSurfaceVertex,
   wallSurfaceSlices,
 } from "../lighting/model/wall-surface.js";
+import { Layer, isWallLayer, FIRST_EDITOR_LAYER } from "../data/layer.js";
 
 const NO_GLASS = Object.freeze([]);
 
@@ -81,8 +82,8 @@ export class LightingRenderer {
 
   tileChanged(x, y, layer) {
     if (!this.field) return;
-    if (layer === 1) this.field.updateTile(x, y);
-    else if (layer === 3 || layer === 4) this.field.queueWall(x, y);
+    if (layer === Layer.Objects) this.field.updateTile(x, y);
+    else if (isWallLayer(layer)) this.field.queueWall(x, y);
   }
 
   update() {
@@ -90,7 +91,7 @@ export class LightingRenderer {
   }
 
   sectionPadding(graphic) {
-    return graphic.layer === 1 &&
+    return graphic.layer === Layer.Objects &&
       lampPreset(graphic.cacheEntry.resourceID - 100)
       ? HALO_PADDING
       : 0;
@@ -98,13 +99,17 @@ export class LightingRenderer {
 
   // Whether `graphic` is drawn with lit vertex tints (WebGL only).
   shades(graphic) {
-    return this.enabled && this.field !== null && graphic.layer < 9;
+    return (
+      this.enabled && this.field !== null && graphic.layer < FIRST_EDITOR_LAYER
+    );
   }
 
   // Emission and glass for one graphic, or null when it has neither.
   prepare(renderTexture, graphic) {
     const lamp =
-      this.enabled && renderTexture.renderTarget && graphic.layer === 1
+      this.enabled &&
+      renderTexture.renderTarget &&
+      graphic.layer === Layer.Objects
         ? lampAt(this.emf, this.settings, graphic.tileX, graphic.tileY)
         : null;
     const appearance = lamp && emissionAppearance(lamp);
@@ -187,7 +192,7 @@ export class LightingRenderer {
       y = graphic.tileY;
     const tint = (x, y, height = 0) => pack(field.tint(x, y, height));
     const solidWall =
-      (graphic.layer === 3 || graphic.layer === 4) &&
+      isWallLayer(graphic.layer) &&
       SOLID_WALL_GRAPHICS.has(this.emf.getTile(x, y).gfx[graphic.layer]);
     if (solidWall) {
       // Neighbouring graphics share surface coordinates AND interpolation rows.
@@ -233,7 +238,7 @@ export class LightingRenderer {
       return;
     }
     let tl, tr, bl, br;
-    if (graphic.layer === 0) {
+    if (graphic.layer === Layer.Ground) {
       tl = pack(field.groundCornerTint(x, y, -1, 0));
       tr = pack(field.groundCornerTint(x, y, 0, -1));
       bl = pack(field.groundCornerTint(x, y, 0, 1));
@@ -267,8 +272,7 @@ export class LightingRenderer {
   // to. A replacement still decoding shows the previous artwork, so no glass.
   windowGlass(graphic) {
     const entry = graphic.cacheEntry;
-    if ((graphic.layer !== 3 && graphic.layer !== 4) || entry.loadingComplete)
-      return NO_GLASS;
+    if (!isWallLayer(graphic.layer) || entry.loadingComplete) return NO_GLASS;
     const glass = windowGlassAt(
       this.emf,
       this.settings,
@@ -292,9 +296,9 @@ export class LightingRenderer {
     for (let i = map.renderList.length - 1; i >= 0; i--) {
       const graphic = map.renderList[i];
       if (
-        graphic.layer === 0 ||
-        graphic.layer === 7 ||
-        graphic.layer >= 9 ||
+        graphic.layer === Layer.Ground ||
+        graphic.layer === Layer.Shadow ||
+        graphic.layer >= FIRST_EDITOR_LAYER ||
         graphic.alpha < 0.5
       )
         continue;

@@ -2,6 +2,8 @@ import { wallSurfaceVertex } from "./wall-surface.js";
 import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
 import { finiteRange, hexColor, tileInMap } from "./validation.js";
 import { ASSET_PACK } from "../packs/index.js";
+import { Layer, isWallLayer } from "../../data/layer.js";
+import { LightKind } from "./light-kind.js";
 
 export const WINDOW_DEFAULTS = Object.freeze({
   enabled: true,
@@ -36,7 +38,7 @@ function glassSpec(key, graphic, layer, height, bounds, glass) {
 // Top-left of a wall bitmap on screen (see wallSurfaceSlices).
 function spriteOrigin(layer, x, y, height) {
   return {
-    x: (x - y) * 32 + (layer === 4 ? 32 : 0),
+    x: (x - y) * 32 + (layer === Layer.RightWall ? 32 : 0),
     y: (x + y) * 16 + 31 - height,
   };
 }
@@ -93,7 +95,7 @@ export function windowKey(x, y, layer, graphic) {
 }
 
 export function windowAt(emf, settings, x, y, layer) {
-  if ((layer !== 3 && layer !== 4) || !tileInMap(emf, x, y)) return null;
+  if (!isWallLayer(layer) || !tileInMap(emf, x, y)) return null;
   const graphic = emf.getTile(x, y).gfx[layer];
   const definition = WINDOW_DEFINITIONS.get(graphic);
   if (!definition || definition.layer !== layer) return null;
@@ -101,7 +103,7 @@ export function windowAt(emf, settings, x, y, layer) {
   return {
     ...definition.defaults,
     ...settings?.windows?.[key],
-    kind: "window",
+    kind: LightKind.Window,
     fixture: definition.fixture,
     name: definition.name,
     x,
@@ -127,8 +129,8 @@ export function windowSource(light) {
     definition.centreX,
     definition.centreY,
   );
-  const normalX = light.layer === 4 ? 1 : 0;
-  const normalY = light.layer === 3 ? 1 : 0;
+  const normalX = light.layer === Layer.RightWall ? 1 : 0;
+  const normalY = light.layer === Layer.DownWall ? 1 : 0;
   // Start outside the closed wall to avoid self-shadowing. This is smaller
   // than one screen pixel, but larger than visibility's numerical tolerance.
   const epsilon = 0.001;
@@ -146,7 +148,7 @@ const NO_GLASS = Object.freeze([]);
 // Glass drawn on the wall sprite at (x, y): its own window or fixture, and a
 // partner part of a neighbour's window. Each carries the light it shows.
 export function windowGlassAt(emf, settings, x, y, layer) {
-  if ((layer !== 3 && layer !== 4) || !tileInMap(emf, x, y)) return NO_GLASS;
+  if (!isWallLayer(layer) || !tileInMap(emf, x, y)) return NO_GLASS;
   const graphic = emf.getTile(x, y).gfx[layer];
   const part = WINDOW_PARTS.get(graphic);
   if (!WINDOW_DEFINITIONS.has(graphic) && !part) return NO_GLASS;

@@ -1,16 +1,17 @@
 import { lampPreset } from "./lamps.js";
 import { windowSource } from "./windows.js";
+import { LightKind } from "./light-kind.js";
 
 // Height and horizontal distance use the same scale as the cached light field.
 export const LIGHT_HEIGHT_UNIT = 32;
 
 export function lightSource(light) {
-  if (light.kind === "window") return windowSource(light);
+  if (light.kind === LightKind.Window) return windowSource(light);
   // Keep EMF tile coordinates as the light's identity. The native object artwork
   // has its foot below/left of the tile centre; use that same ground anchor for
   // illumination, visibility and guides, including during move previews.
   const anchor =
-    light.kind === "free" ? null : lampPreset(light.graphic)?.anchor;
+    light.kind === LightKind.Free ? null : lampPreset(light.graphic)?.anchor;
   const dx = anchor?.x ?? 0;
   const dy = anchor?.y ?? 0;
   return {

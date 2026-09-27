@@ -1,6 +1,7 @@
 import { lampAt, freeLightAt, lightSettings } from "./lamps.js";
 import { windowAt, windowSettings } from "./windows.js";
 import { finiteRange, hexColor } from "./validation.js";
+import { LightKind } from "./light-kind.js";
 
 // A map's lighting settings: ambient light and per-light overrides, keyed by
 // lamp, free light and window. Settings objects are immutable; each edit
@@ -23,24 +24,24 @@ export function defaultLighting() {
 
 export function selectedLight(emf, lighting, selection) {
   if (!selection) return null;
-  if (selection.kind === "window")
+  if (selection.kind === LightKind.Window)
     return windowAt(emf, lighting, selection.x, selection.y, selection.layer);
-  return selection.kind === "free"
+  return selection.kind === LightKind.Free
     ? freeLightAt(emf, lighting, selection.x, selection.y)
     : lampAt(emf, lighting, selection.x, selection.y);
 }
 
 export function withLight(lighting, light, settings) {
   const collection =
-    light.kind === "window"
+    light.kind === LightKind.Window
       ? "windows"
-      : light.kind === "free"
+      : light.kind === LightKind.Free
         ? "lights"
         : "lamps";
   const entries = { ...lighting[collection] };
   if (settings)
     entries[light.key] =
-      light.kind === "window"
+      light.kind === LightKind.Window
         ? windowSettings(settings)
         : lightSettings(settings);
   else delete entries[light.key];

@@ -7,6 +7,12 @@ import {
   CHICAGO_AMBER,
 } from "../lighting/model/lamps.js";
 import scrollbarStyles from "../styles/scrollbar";
+import { LightKind } from "../lighting/model/light-kind.js";
+import {
+  AmbientEdit,
+  LightEdit,
+  LightingAction,
+} from "../controllers/lighting-actions.js";
 
 // A light with no graphic: a small sun, drawn in the text colour.
 const SUN_ICON = svg`<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
@@ -351,7 +357,7 @@ export class LightingPanel extends LitElement {
     // Keep inspector arrows/space/typing from reaching Phaser's map controls.
     this.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
-        this.action("select");
+        this.action(LightingAction.Select);
         this.shadowRoot.activeElement?.blur();
       }
       event.stopPropagation();
@@ -418,12 +424,12 @@ export class LightingPanel extends LitElement {
           event.target.previousElementSibling.querySelector(
             "output",
           ).textContent = format(Number(event.target.value));
-          this.action(`preview-${scope}`, {
+          this.action(scope.preview, {
             [name]: Number(event.target.value),
           });
         }}
         @change=${(event) =>
-          this.action(scope, { [name]: Number(event.target.value) })}
+          this.action(scope.edit, { [name]: Number(event.target.value) })}
       />
     </label>`;
   }
@@ -441,13 +447,13 @@ export class LightingPanel extends LitElement {
         }}
         @input=${(event) =>
           this.action(
-            `preview-${scope}`,
+            scope.preview,
             { color: event.target.value },
             event.target.lightTarget,
           )}
         @change=${(event) => {
           this.action(
-            scope,
+            scope.edit,
             { color: event.target.value },
             event.target.lightTarget,
           );
@@ -476,7 +482,7 @@ export class LightingPanel extends LitElement {
             aria-label=${`Choose ${tile.name.toLowerCase()}`}
             aria-pressed=${tool.preset === tile.id}
             ?disabled=${tile.disabled}
-            @click=${() => this.action("preset", tile.id)}
+            @click=${() => this.action(LightingAction.ChoosePreset, tile.id)}
           >
             <span class="art">${tile.art}</span>${tile.name}
           </button>`,
@@ -488,8 +494,8 @@ export class LightingPanel extends LitElement {
     if (tool.notice) return html`<span class="notice">${tool.notice}</span>`;
     if (tool.mode === "move")
       return html`Click
-        ${selected?.kind === "free" ? "a tile" : "an empty tile"} to move this
-        light. <kbd>Esc</kbd> cancels.`;
+        ${selected?.kind === LightKind.Free ? "a tile" : "an empty tile"} to
+        move this light. <kbd>Esc</kbd> cancels.`;
     if (tool.mode === "place")
       return tool.preset === "free"
         ? html`Click any tile to place light, even over an object.
@@ -505,7 +511,7 @@ export class LightingPanel extends LitElement {
         Native lamps, windows and wall lanterns light automatically. Select one
         to change it, or add a free light.
       </p>`;
-    const fixed = selected.kind === "window";
+    const fixed = selected.kind === LightKind.Window;
     const copy = COPY[fixed ? selected.fixture || "window" : "lamp"];
     return html`
       <div class="title">
@@ -513,7 +519,7 @@ export class LightingPanel extends LitElement {
         <span class="muted">${selected.x}, ${selected.y}</span>
       </div>
       ${this.toggle(copy.on, selected.enabled, (enabled) =>
-        this.action("lamp", { enabled }),
+        this.action(LightingAction.EditLight, { enabled }),
       )}
       ${this.slider(
         copy.reach,
@@ -523,7 +529,7 @@ export class LightingPanel extends LitElement {
         copy.maxReach,
         0.5,
         " tiles",
-        "lamp",
+        LightEdit,
       )}
       ${this.slider(
         copy.brightness,
@@ -533,9 +539,9 @@ export class LightingPanel extends LitElement {
         2,
         0.05,
         "%",
-        "lamp",
+        LightEdit,
       )}
-      ${selected.kind === "free"
+      ${selected.kind === LightKind.Free
         ? html`${this.slider(
               "Source height",
               "height",
@@ -544,7 +550,7 @@ export class LightingPanel extends LitElement {
               192,
               8,
               " px",
-              "lamp",
+              LightEdit,
             )}
             <p>
               Raises the source above its ground anchor. Walls receive light at
@@ -558,14 +564,14 @@ export class LightingPanel extends LitElement {
               2,
               0.05,
               "%",
-              "lamp",
+              LightEdit,
             )}
             <p>${copy.about}</p>`}
-      ${this.colour("Light colour", selected.color, "lamp")}
+      ${this.colour("Light colour", selected.color, LightEdit)}
       ${fixed
         ? html`<button
               class="wide"
-              @click=${() => this.action("window-default")}
+              @click=${() => this.action(LightingAction.ResetWindow)}
             >
               ${copy.reset}
             </button>
@@ -574,25 +580,30 @@ export class LightingPanel extends LitElement {
               ${this.toggle(
                 "Block light at walls",
                 selected.shadows !== false,
-                (shadows) => this.action("lamp", { shadows }),
+                (shadows) => this.action(LightingAction.EditLight, { shadows }),
               )}
             </div>
             <button
               class="wide"
-              @click=${() => this.action("lamp", CHICAGO_AMBER)}
+              @click=${() =>
+                this.action(LightingAction.EditLight, CHICAGO_AMBER)}
             >
               Chicago amber
             </button>
             <div class="actions">
-              <button @click=${() => this.action("move")}>Move</button
-              ><button @click=${() => this.action("duplicate")}>
+              <button @click=${() => this.action(LightingAction.Move)}>
+                Move</button
+              ><button @click=${() => this.action(LightingAction.Duplicate)}>
                 Duplicate</button
-              ><button class="danger" @click=${() => this.action("delete")}>
+              ><button
+                class="danger"
+                @click=${() => this.action(LightingAction.Delete)}
+              >
                 Delete
               </button>
             </div>
             <p>
-              ${selected.kind === "free"
+              ${selected.kind === LightKind.Free
                 ? "Moving or deleting affects only this light. Map graphics stay in place."
                 : "Moving or deleting includes the lamp and its light."}
             </p>`}
@@ -622,10 +633,10 @@ export class LightingPanel extends LitElement {
       <section>
         <div class="toggles">
           ${this.toggle("Preview lighting", tool.preview, (value) =>
-            this.action("preview", value),
+            this.action(LightingAction.TogglePreview, value),
           )}
           ${this.toggle("Light guides", tool.guides, (value) =>
-            this.action("guides", value),
+            this.action(LightingAction.ToggleGuides, value),
           )}
         </div>
         ${tool.guides
@@ -646,13 +657,13 @@ export class LightingPanel extends LitElement {
         <div class="segmented mode">
           <button
             aria-pressed=${tool.mode === "place"}
-            @click=${() => this.action("place")}
+            @click=${() => this.action(LightingAction.Place)}
           >
             Place ${preset.name.toLowerCase()}
           </button>
           <button
             aria-pressed=${tool.mode === "select"}
-            @click=${() => this.action("select")}
+            @click=${() => this.action(LightingAction.Select)}
           >
             Select
           </button>
@@ -672,7 +683,7 @@ export class LightingPanel extends LitElement {
                 aria-pressed=${ambient.brightness === item.brightness &&
                 ambient.color === item.color}
                 @click=${() =>
-                  this.action("ambient", {
+                  this.action(LightingAction.EditAmbient, {
                     brightness: item.brightness,
                     color: item.color,
                   })}
@@ -689,9 +700,9 @@ export class LightingPanel extends LitElement {
           1,
           0.05,
           "%",
-          "ambient",
+          AmbientEdit,
         )}
-        ${this.colour("Ambient colour", ambient.color, "ambient")}
+        ${this.colour("Ambient colour", ambient.color, AmbientEdit)}
         <p>
           Night shows each light clearly. Recognised building walls block light;
           fences and decorations let it through.
@@ -699,8 +710,11 @@ export class LightingPanel extends LitElement {
       </section>
       <footer>
         <div class="segmented">
-          <button @click=${() => this.action("load")}>Load lighting…</button
-          ><button @click=${() => this.action("save")}>Save lighting…</button>
+          <button @click=${() => this.action(LightingAction.Load)}>
+            Load lighting…</button
+          ><button @click=${() => this.action(LightingAction.Save)}>
+            Save lighting…
+          </button>
         </div>
         <p class=${this.mapState.lightingDirty ? "dirty" : ""}>
           ${this.mapState.lightingDirty

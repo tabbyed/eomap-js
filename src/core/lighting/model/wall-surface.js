@@ -1,3 +1,4 @@
+import { Layer } from "../../data/layer.js";
 // EO tiles project to (32 * (x - y) + 32, 16 * (x + y) + 16).
 // A wall is a continuous vertical plane, even when its art is split across
 // bitmap resources with different heights. Match EOMap's -1px wall offset and
@@ -14,7 +15,7 @@ export function wallSurfaceVertex(
   localX,
   localY,
 ) {
-  if (layer === 3) {
+  if (layer === Layer.DownWall) {
     const x = tileX - 0.5 + localX / 32;
     return {
       x,
@@ -24,7 +25,7 @@ export function wallSurfaceVertex(
       sampleY: tileY + 1,
     };
   }
-  if (layer === 4) {
+  if (layer === Layer.RightWall) {
     const y = tileY + 0.5 - localX / 32;
     return {
       x: tileX + 0.5,

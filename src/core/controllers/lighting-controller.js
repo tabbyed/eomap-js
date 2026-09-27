@@ -1,4 +1,5 @@
 import { LightingCommand } from "../command/lighting-command";
+import { LightingAction } from "./lighting-actions.js";
 import { saveLighting } from "../lighting/file/save.js";
 import {
   ambientSettings,
@@ -7,6 +8,7 @@ import {
 } from "../lighting/model/settings.js";
 import { lightSettings } from "../lighting/model/lamps.js";
 import { readLightingFile } from "../lighting/file/lighting-file.js";
+import { LightKind } from "../lighting/model/light-kind.js";
 
 const MAX_LIGHTING_FILE_SIZE = 4 * 1024 * 1024;
 
@@ -68,45 +70,46 @@ export class LightingController {
     };
     try {
       switch (type) {
-        case "preview":
+        case LightingAction.TogglePreview:
           updateTool({ preview: value });
           return;
-        case "guides":
+        case LightingAction.ToggleGuides:
           updateTool({ guides: value });
           return;
-        case "preset":
+        case LightingAction.ChoosePreset:
           updateTool({ preset: value, mode: "place", duplicate: null });
           return;
-        case "place":
+        case LightingAction.Place:
           updateTool({ mode: "place", duplicate: null });
           return;
-        case "select":
+        case LightingAction.Select:
           updateTool({ mode: "select", duplicate: null });
           return;
-        case "window-default":
-          if (light?.kind !== "window") return;
+        case LightingAction.ResetWindow:
+          if (light?.kind !== LightKind.Window) return;
           this.commit(state, withLight(state.lighting, light, null));
           updateTool({
             notice: `${light.name} reset. Undo restores your settings.`,
           });
           return;
-        case "move":
-          if (light && light.kind !== "window") updateTool({ mode: "move" });
+        case LightingAction.Move:
+          if (light && light.kind !== LightKind.Window)
+            updateTool({ mode: "move" });
           return;
-        case "duplicate":
-          if (light && light.kind !== "window")
+        case LightingAction.Duplicate:
+          if (light && light.kind !== LightKind.Window)
             updateTool({
               mode: "place",
               preset: light.id,
               duplicate: lightSettings(light),
             });
           return;
-        case "delete":
-          if (!light || light.kind === "window") return;
+        case LightingAction.Delete:
+          if (!light || light.kind === LightKind.Window) return;
           this.commit(
             state,
             withLight(state.lighting, light, null),
-            light.kind === "free"
+            light.kind === LightKind.Free
               ? []
               : [{ x: light.x, y: light.y, graphic: null }],
           );
@@ -114,21 +117,21 @@ export class LightingController {
             selection: null,
             mode: "select",
             notice:
-              light.kind === "free"
+              light.kind === LightKind.Free
                 ? "Free light deleted. Undo restores it."
                 : "Lamp deleted. Undo restores the lamp and its light.",
           });
           return;
-        case "lamp":
-        case "preview-lamp":
-        case "ambient":
-        case "preview-ambient":
+        case LightingAction.EditLight:
+        case LightingAction.PreviewLight:
+        case LightingAction.EditAmbient:
+        case LightingAction.PreviewAmbient:
           this.edit(state, type, light, value);
           return;
-        case "load":
+        case LightingAction.Load:
           await this.load(state, updateTool);
           return;
-        case "save":
+        case LightingAction.Save:
           await this.save(state, updateTool);
           return;
       }
@@ -138,8 +141,14 @@ export class LightingController {
   }
 
   edit(state, type, light, value) {
-    if (type.endsWith("lamp") && !light) return;
-    const next = type.endsWith("ambient")
+    const ambient =
+      type === LightingAction.EditAmbient ||
+      type === LightingAction.PreviewAmbient;
+    const preview =
+      type === LightingAction.PreviewLight ||
+      type === LightingAction.PreviewAmbient;
+    if (!ambient && !light) return;
+    const next = ambient
       ? {
           ...state.lighting,
           ambient: ambientSettings({ ...state.lighting.ambient, ...value }),
@@ -149,7 +158,7 @@ export class LightingController {
     scene?.tools?.get("lighting")?.clearPreview();
     // Move straight from the displayed preview to the next one; the light
     // field only recomputes the lights that differ.
-    if (type.startsWith("preview-")) state.gameObject.previewLighting(next);
+    if (preview) state.gameObject.previewLighting(next);
     else if (JSON.stringify(next) !== JSON.stringify(state.lighting))
       this.commit(state, next);
     else state.gameObject.clearLightingPreview();

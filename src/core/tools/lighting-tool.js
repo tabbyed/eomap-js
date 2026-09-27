@@ -15,6 +15,8 @@ import {
 } from "../lighting/model/light-geometry.js";
 import { emissionAppearance } from "../lighting/appearance/lamp-emission.js";
 import { windowGlassSprites } from "../lighting/model/windows.js";
+import { Layer } from "../data/layer.js";
+import { LightKind } from "../lighting/model/light-kind.js";
 
 const LAMP_GUIDE = 0xf6c777;
 const WINDOW_GUIDE = 0x98ddff;
@@ -76,7 +78,7 @@ export class LightingTool extends Tool {
             x: window.x,
             y: window.y,
             layer: window.layer,
-            kind: "window",
+            kind: LightKind.Window,
           },
         });
         return;
@@ -118,7 +120,7 @@ export class LightingTool extends Tool {
       (state.preset === "free"
         ? FREE_LIGHT_PRESET
         : LAMP_PRESETS.find((item) => item.id === state.preset));
-    if (preset?.kind === "free") {
+    if (preset?.kind === LightKind.Free) {
       if (freeLightAt(scene.emf, current, x, y)) {
         this.notify({
           notice:
@@ -129,14 +131,14 @@ export class LightingTool extends Tool {
       let lighting = origin ? withLight(current, origin, null) : current;
       lighting = withLight(
         lighting,
-        { kind: "free", key: `${x},${y}` },
+        { kind: LightKind.Free, key: `${x},${y}` },
         origin || state.duplicate || preset,
       );
       scene.commandInvoker.finalizeAggregate();
       scene.commandInvoker.add(new LightingCommand(scene.mapState, lighting));
       this.notify({
         mode: "select",
-        selection: { x, y, kind: "free" },
+        selection: { x, y, kind: LightKind.Free },
         duplicate: null,
         notice: origin
           ? "Free light moved."
@@ -144,7 +146,7 @@ export class LightingTool extends Tool {
       });
       return;
     }
-    if (scene.emf.getTile(x, y).gfx[1]) {
+    if (scene.emf.getTile(x, y).gfx[Layer.Objects]) {
       this.notify({
         notice: "This tile already has an object. Choose an empty tile.",
       });
@@ -175,7 +177,7 @@ export class LightingTool extends Tool {
     );
     this.notify({
       mode: "select",
-      selection: { x, y, kind: "lamp" },
+      selection: { x, y, kind: LightKind.Lamp },
       duplicate: null,
       notice: origin
         ? "Lamp moved. Undo restores its previous position."
@@ -233,7 +235,7 @@ export class LightingTool extends Tool {
   drawOverview(settings) {
     const map = this.scene.map;
     for (const graphic of map.renderList) {
-      if (graphic.layer === 1) {
+      if (graphic.layer === Layer.Objects) {
         const light = lampAt(map.emf, settings, graphic.tileX, graphic.tileY);
         if (light)
           this.drawSourceGuide(light, LAMP_GUIDE, light.enabled ? 0.6 : 0.3);
@@ -376,7 +378,7 @@ export class LightingTool extends Tool {
     }
 
     let light = selectedLight(scene.emf, settings, state.selection);
-    if (light?.kind === "window" && state.mode === "select") {
+    if (light?.kind === LightKind.Window && state.mode === "select") {
       if (state.guides) this.drawWindowGuide(light);
       return true;
     }
@@ -399,11 +401,11 @@ export class LightingTool extends Tool {
           y: scene.currentPos.y,
         };
         valid =
-          light.kind === "free"
+          light.kind === LightKind.Free
             ? !freeLightAt(scene.emf, settings, light.x, light.y)
-            : !scene.emf.getTile(light.x, light.y).gfx[1];
+            : !scene.emf.getTile(light.x, light.y).gfx[Layer.Objects];
         const entry =
-          light.kind === "free"
+          light.kind === LightKind.Free
             ? null
             : scene.textureCache.getResource(4, light.graphic + 100);
         if (entry !== this.cacheEntry) {
@@ -456,7 +458,7 @@ export class LightingTool extends Tool {
           this.previewLight = light;
           this.previewField = map.lighting.field;
           map.lighting.displacedLampKey =
-            movedLight?.kind === "lamp" ? movedLight.key : null;
+            movedLight?.kind === LightKind.Lamp ? movedLight.key : null;
           // A move previews the same source at its destination, not two lamps.
           map.lighting.field.setPreview({ light: light, replaces: movedLight });
           map.invalidateCachedFrame();

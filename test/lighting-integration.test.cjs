@@ -20,6 +20,7 @@ const { MapState } = require("../src/core/state/map-state");
 const {
   LightingController,
 } = require("../src/core/controllers/lighting-controller");
+const { LightingAction } = require("../src/core/controllers/lighting-actions");
 const { EMF } = require("../src/core/data/emf");
 
 // Load the real application methods without booting Lit, Spectrum or a GPU.
@@ -91,13 +92,13 @@ test("slider previews replace one contribution directly; committing the visible 
     accumulate(...args);
   };
   await app.lightingController.handle({
-    type: "preview-lamp",
+    type: LightingAction.PreviewLight,
     value: { brightness: 1.7 },
   });
   assert.equal(bakes, 2);
   bakes = 0;
   await app.lightingController.handle({
-    type: "preview-lamp",
+    type: LightingAction.PreviewLight,
     value: { brightness: 1.8 },
   });
   assert.equal(
@@ -112,7 +113,7 @@ test("slider previews replace one contribution directly; committing the visible 
   );
   bakes = 0;
   await app.lightingController.handle({
-    type: "lamp",
+    type: LightingAction.EditLight,
     value: { brightness: 1.8 },
   });
   assert.equal(bakes, 0);
@@ -260,7 +261,7 @@ test("a delayed lighting save cannot restore another map's tool selection or pre
       return handle;
     },
   };
-  await app.lightingController.handle({ type: "save" });
+  await app.lightingController.handle({ type: LightingAction.Save });
   assert.equal(state.lightingFileHandle, handle);
   assert.equal(app.lightingToolState, replacementTool);
   assert.equal(previewResets, 0);
@@ -297,14 +298,14 @@ test("an edit lands on the light it was opened for after the selection moves", a
   const { app, state } = fixture();
   const target = { kind: "lamp", x: 5, y: 5 };
   await app.lightingController.handle({
-    type: "preview-lamp",
+    type: LightingAction.PreviewLight,
     value: { color: "#ff0000" },
     target,
   });
   // The map selection moves before the colour picker reports its value.
   app.lightingToolState = { ...app.lightingToolState, selection: null };
   await app.lightingController.handle({
-    type: "lamp",
+    type: LightingAction.EditLight,
     value: { color: "#ff0000" },
     target,
   });
@@ -314,11 +315,11 @@ test("an edit lands on the light it was opened for after the selection moves", a
 test("committing one setting drops a preview of another", async () => {
   const { app, state, field } = fixture();
   await app.lightingController.handle({
-    type: "preview-lamp",
+    type: LightingAction.PreviewLight,
     value: { brightness: 0.2 },
   });
   await app.lightingController.handle({
-    type: "ambient",
+    type: LightingAction.EditAmbient,
     value: { brightness: 0.4 },
   });
   assert.equal(model.lampAt(state.emf, state.lighting, 5, 5).brightness, 1.6);

@@ -3,6 +3,8 @@ import { SOLID_WALL_GRAPHICS, WallGrid } from "./walls.js";
 import { LIGHT_HEIGHT_UNIT, lightSource } from "../model/light-geometry.js";
 import { windowAt } from "../model/windows.js";
 import { tileInMap } from "../model/validation.js";
+import { Layer, isWallLayer } from "../../data/layer.js";
+import { LightKind } from "../model/light-kind.js";
 
 export const HEIGHT_STEP = LIGHT_HEIGHT_UNIT;
 export const HEIGHT_LEVELS = 19; // 0..576 px: max source height + max light reach.
@@ -73,9 +75,11 @@ export class LightField {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const tile = emf.getTile(x, y);
-        if (tile.gfx[1] != null) this.updateTile(x, y);
-        if (tile.gfx[3] != null) this.updateWindow(x, y, 3);
-        if (tile.gfx[4] != null) this.updateWindow(x, y, 4);
+        if (tile.gfx[Layer.Objects] != null) this.updateTile(x, y);
+        if (tile.gfx[Layer.DownWall] != null)
+          this.updateWindow(x, y, Layer.DownWall);
+        if (tile.gfx[Layer.RightWall] != null)
+          this.updateWindow(x, y, Layer.RightWall);
       }
     }
     forChangedKeys(null, settings.lights, (x, y) => this.updateFreeLight(x, y));
@@ -86,7 +90,11 @@ export class LightField {
   }
 
   windowSourceKey(x, y, layer) {
-    return this.sourceKey(layer === 3 ? WINDOW_DOWN : WINDOW_RIGHT, x, y);
+    return this.sourceKey(
+      layer === Layer.DownWall ? WINDOW_DOWN : WINDOW_RIGHT,
+      x,
+      y,
+    );
   }
 
   setAmbient(ambient) {
@@ -147,7 +155,7 @@ export class LightField {
   }
 
   updateWindow(x, y, layer) {
-    if (!tileInMap(this.emf, x, y) || (layer !== 3 && layer !== 4)) return;
+    if (!tileInMap(this.emf, x, y) || !isWallLayer(layer)) return;
     this.replaceSource(
       this.windowSourceKey(x, y, layer),
       windowAt(this.emf, this.settings, x, y, layer),
@@ -185,7 +193,7 @@ export class LightField {
         y = (index - x) / this.width;
       // Window graphics are also blockers. Keep their OLD source until every
       // affected contribution has been removed with the OLD optical grid.
-      for (const layer of [3, 4]) {
+      for (const layer of [Layer.DownWall, Layer.RightWall]) {
         const key = this.windowSourceKey(x, y, layer);
         const previous = this.sources.get(key);
         const light = windowAt(this.emf, this.settings, x, y, layer);
@@ -199,9 +207,9 @@ export class LightField {
       // alter any light path. Only emitter changes above need work in that case.
       if (
         Boolean(this.walls.down[index]) !==
-          SOLID_WALL_GRAPHICS.has(tile.gfx[3]) ||
+          SOLID_WALL_GRAPHICS.has(tile.gfx[Layer.DownWall]) ||
         Boolean(this.walls.right[index]) !==
-          SOLID_WALL_GRAPHICS.has(tile.gfx[4])
+          SOLID_WALL_GRAPHICS.has(tile.gfx[Layer.RightWall])
       )
         blockers.push(x, y);
     }
@@ -267,15 +275,15 @@ export class LightField {
     }
   }
 
-  accumulate(lamp, sign) {
-    if (!lamp.enabled || lamp.brightness === 0) return;
-    const channels = rgb(lamp.color);
-    const radius = lamp.radius;
+  accumulate(light, sign) {
+    if (!light.enabled || light.brightness === 0) return;
+    const channels = rgb(light.color);
+    const radius = light.radius;
     const radiusSquared = radius * radius;
-    const height = lamp.height ?? 0;
-    const source = lightSource(lamp);
+    const height = light.height ?? 0;
+    const source = lightSource(light);
     const depths =
-      lamp.shadows === false
+      light.shadows === false
         ? null
         : this.walls.lazyDepths({ ...source, radius });
     const firstHeight = Math.max(0, Math.ceil(height / HEIGHT_STEP - radius));
@@ -294,7 +302,7 @@ export class LightField {
     const maxY = Math.min(this.height - 1, Math.ceil(source.y + radius));
     // Windows emit through their outward-facing glass, never back into the
     // building, including when another wall provides an open route.
-    const facing = lamp.kind === "window";
+    const facing = light.kind === LightKind.Window;
     const sourceZ = height / HEIGHT_STEP;
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
@@ -317,7 +325,7 @@ export class LightField {
           const distanceSquared =
             (planarSquared + heightSquares[z - firstHeight]) / radiusSquared;
           if (distanceSquared >= 1) continue;
-          const falloff = (1 - distanceSquared) ** 2 * lamp.brightness * sign;
+          const falloff = (1 - distanceSquared) ** 2 * light.brightness * sign;
           const offset = z * this.bandSize + index;
           this.values[offset] += channels[0] * falloff;
           this.values[offset + 1] += channels[1] * falloff;

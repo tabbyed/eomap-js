@@ -1,5 +1,7 @@
 import { finiteRange, hexColor, tileInMap } from "./validation.js";
 import { ASSET_PACK } from "../packs/index.js";
+import { Layer } from "../../data/layer.js";
+import { LightKind } from "./light-kind.js";
 
 // Lamps and free lights: presets, lookup on the map and settings validation.
 
@@ -17,7 +19,7 @@ export const FREE_LIGHT_PRESET = {
   enabled: true,
   height: 0,
   shadows: true,
-  kind: "free",
+  kind: LightKind.Free,
   description: "Light any tile without adding a graphic",
 };
 
@@ -41,7 +43,7 @@ export function lampKey(x, y, graphic) {
 
 export function lampAt(emf, lighting, x, y) {
   if (!tileInMap(emf, x, y)) return null;
-  const graphic = emf.getTile(x, y).gfx[1];
+  const graphic = emf.getTile(x, y).gfx[Layer.Objects];
   const preset = lampPreset(graphic);
   if (!preset) return null;
   const key = lampKey(x, y, graphic);
@@ -54,7 +56,7 @@ export function lampAt(emf, lighting, x, y) {
     y,
     key,
     graphic,
-    kind: "lamp",
+    kind: LightKind.Lamp,
   };
 }
 
