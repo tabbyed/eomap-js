@@ -1,12 +1,7 @@
-// Curated opaque surfaces in the native EO pack, verified against gfx006.
-// Wall layers also contain fences, posts, fires and decorations. Walkability
-// (TileSpec.Wall) is deliberately not used as an optical property.
-export const SOLID_WALL_GRAPHICS = new Set([
-  3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 92, 93, 94, 95, 96, 98, 99, 100, 116, 342,
-  344, 350, 351, 352, 353, 354, 355, 356, 357, 431, 438, 462, 464, 465, 467,
-  468, 469, 471, 472, 474, 475, 476, 477, 479, 480, 482, 483, 484, 486, 534,
-  535,
-]);
+import { ASSET_PACK } from "./packs/index.js";
+
+// Graphics that block light; see the pack catalogue for how they were chosen.
+export const SOLID_WALL_GRAPHICS = new Set(ASSET_PACK.solidWalls);
 
 export const SHADOW_RAYS = 512;
 

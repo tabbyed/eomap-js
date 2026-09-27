@@ -1,17 +1,9 @@
 import { isRgbaPixels } from "../gfx/pixel-hit-mask.js";
 import { HEX_COLOR } from "./validation.js";
+import { ASSET_PACK } from "./packs/index.js";
 
-// Native gfx004 glass regions, in unscaled sprite pixels. Keep the frame,
-// supports and pole out of the emissive overlay, even when they have highlights.
-const GARDEN_LANTERN = { left: 11, top: 17, right: 21, bottom: 22 };
-const GLASS_REGIONS = new Map([
-  [7, { left: 5, top: 12, right: 12, bottom: 17 }],
-  [6, { left: 5, top: 15, right: 23, bottom: 33 }],
-  [400, { left: 6, top: 16, right: 18, bottom: 35 }],
-  // 89 and 90 are identical garden-lantern artwork.
-  [89, GARDEN_LANTERN],
-  [90, GARDEN_LANTERN],
-]);
+// Each lamp's glass region, from the pack catalogue.
+const GLASS_REGIONS = ASSET_PACK.bulbGlass;
 
 /** Build a white tintable mask from an ImageData-like decoded native sprite. */
 export function createBulbMask(pixels, graphic) {

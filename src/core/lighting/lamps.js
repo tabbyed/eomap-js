@@ -1,59 +1,10 @@
 import { windowAt, windowKey, windowSettings } from "./windows.js";
 import { finiteRange, hexColor, tileInMap } from "./validation.js";
+import { ASSET_PACK } from "./packs/index.js";
 
-// EMF graphics, not EGF resource IDs (the latter are graphic + 100).
-// These defaults describe the native EO pack. Other packs can override them.
-// Anchors are screen-pixel offsets from the tile centre to the visible foot.
-// Source heights are measured from that foot to the centre of the glass.
-export const CHICAGO_AMBER = { color: "#ffad46", brightness: 1.6, glow: 1.15 };
-
-export const LAMP_PRESETS = [
-  {
-    id: "street",
-    name: "Street lamp",
-    graphic: 7,
-    radius: 5,
-    ...CHICAGO_AMBER,
-    height: 103,
-    anchor: { x: -1, y: 13 },
-    description: "Chicago amber along a path",
-  },
-  {
-    id: "tall",
-    name: "Tall lamp",
-    graphic: 6,
-    radius: 6,
-    ...CHICAGO_AMBER,
-    brightness: 1.8,
-    height: 114,
-    anchor: { x: -2, y: 13 },
-    description: "A wider pool for an entrance",
-  },
-  {
-    id: "lantern",
-    name: "Lantern",
-    graphic: 400,
-    radius: 3,
-    ...CHICAGO_AMBER,
-    brightness: 1.1,
-    height: 15,
-    anchor: { x: -2, y: 9 },
-    description: "A small, intimate pool",
-  },
-  {
-    id: "garden",
-    name: "Garden lantern",
-    graphic: 89,
-    // Graphic 90 is identical artwork under another ID; placements use 89.
-    variants: [90],
-    radius: 3,
-    ...CHICAGO_AMBER,
-    brightness: 1.1,
-    height: 16,
-    anchor: { x: -3, y: 7 },
-    description: "A low stone lantern for paths and gardens",
-  },
-];
+// Lamp presets come from the pack catalogue. Other packs can override them.
+export const CHICAGO_AMBER = ASSET_PACK.chicagoAmber;
+export const LAMP_PRESETS = ASSET_PACK.lamps;
 
 export const AMBIENT_PRESETS = {
   day: { name: "Day", brightness: 1, color: "#ffffff" },
@@ -220,7 +171,7 @@ export function serializeLighting(emf, lighting) {
     JSON.stringify(
       {
         version: 1,
-        assetPack: "eo-native",
+        assetPack: ASSET_PACK.id,
         map: {
           width: emf.width,
           height: emf.height,
@@ -247,7 +198,7 @@ export function parseLighting(text, emf) {
 // rest. On an unchanged map a mismatched entry means a damaged file.
 export function readLightingFile(text, emf) {
   const input = JSON.parse(text);
-  if (!input || input.version !== 1 || input.assetPack !== "eo-native")
+  if (!input || input.version !== 1 || input.assetPack !== ASSET_PACK.id)
     throw new Error("Unsupported lighting file or graphics pack.");
   if (!input.map || typeof input.map !== "object")
     throw new Error("Unsupported lighting file or graphics pack.");
