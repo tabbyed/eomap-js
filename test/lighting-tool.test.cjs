@@ -293,3 +293,45 @@ test("a lamp's part ghosts release their graphics when a one-tile lamp is chosen
   tool.dispose();
   assert.ok([...entries.values()].every(({ refCount }) => refCount === 0));
 });
+
+test("switching from a fireplace to a free light releases every ghost texture", () => {
+  const { scene } = fixture("lamp");
+  const refs = new Map();
+  scene.textureCache.getResource = (_file, resource) => {
+    if (!refs.has(resource))
+      refs.set(resource, {
+        loadingComplete: null,
+        refCount: 0,
+        incRef() {
+          this.refCount++;
+        },
+        decRef() {
+          this.refCount--;
+        },
+        asset: {
+          getFrame: () => ({ width: 32, height: 64, name: "art", texture: {} }),
+        },
+      });
+    return refs.get(resource);
+  };
+  let state = {
+    mode: "place",
+    preset: "fireplace",
+    selection: null,
+    preview: false,
+    guides: false,
+  };
+  scene.data = { get: () => state };
+  scene.currentPos = { x: 2, y: 2, valid: true };
+  const tool = new LightingTool(scene);
+  tool.update();
+  assert.deepEqual(
+    [refs.get(177).refCount, refs.get(178).refCount],
+    [1, 1],
+    "the hearth and its half are shown",
+  );
+  // A free light has no ghost, so it holds neither.
+  state = { ...state, preset: "free" };
+  tool.update();
+  assert.deepEqual([refs.get(177).refCount, refs.get(178).refCount], [0, 0]);
+});

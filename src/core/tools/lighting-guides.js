@@ -348,6 +348,9 @@ export class LightingGuides {
           this.cacheEntry?.decRef();
           this.cacheEntry = entry;
           entry?.incRef();
+          // A free light has no ghost, so it holds no part textures either.
+          if (!entry)
+            for (const part of this.partEntries.splice(0)) part?.decRef();
         }
         if (entry && !entry.loadingComplete) {
           const frame = entry.asset.getFrame(0);
