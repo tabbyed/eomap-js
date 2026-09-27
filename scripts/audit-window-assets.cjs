@@ -304,7 +304,7 @@ for (const spec of specs) {
         ({ map, x, y, layer }) =>
           layer === spec.layer &&
           !placedAt.has(
-            `${map}|${x + spec.dx},${y + spec.dy},${layer}|${spec.owner}`,
+            `${map}|${x - spec.dx},${y - spec.dy},${layer}|${spec.owner}`,
           ),
       )
     : [];

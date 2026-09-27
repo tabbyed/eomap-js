@@ -4,6 +4,7 @@ import { finiteRange, hexColor, tileInMap } from "./validation.js";
 import { ASSET_PACK } from "../packs/index.js";
 import { Layer, isWallLayer } from "../../data/layer.js";
 import { LightKind } from "./light-kind.js";
+import { ownerOf, partsOf, placedParts } from "./parts.js";
 
 export const WINDOW_DEFAULTS = Object.freeze({
   enabled: true,
@@ -43,6 +44,8 @@ function spriteOrigin(layer, x, y, height) {
   };
 }
 
+// Each part's own glass. Which window it belongs to, and where, is the
+// shared part relation's business (parts.js).
 export const WINDOW_PARTS = new Map(
   parts.map(([graphic, layer, owner, dx, dy, height, bounds, glass]) => [
     graphic,
@@ -61,10 +64,10 @@ export const WINDOW_PARTS = new Map(
 export const WINDOW_DEFINITIONS = new Map(
   definitions.map(([graphic, layer, height, bounds, glass, name, defaults]) => {
     let [left, top, right, bottom] = bounds;
-    for (const part of WINDOW_PARTS.values()) {
-      if (part.owner !== graphic || part.layer !== layer) continue;
+    for (const { graphic: partGraphic, dx, dy } of partsOf(layer, graphic)) {
+      const part = WINDOW_PARTS.get(partGraphic);
       const own = spriteOrigin(layer, 0, 0, height);
-      const other = spriteOrigin(layer, -part.dx, -part.dy, part.height);
+      const other = spriteOrigin(layer, dx, dy, part.height);
       const offsetX = other.x - own.x,
         offsetY = other.y - own.y;
       left = Math.min(left, part.bounds[0] + offsetX);
@@ -150,34 +153,25 @@ const NO_GLASS = Object.freeze([]);
 export function windowGlassAt(emf, settings, x, y, layer) {
   if (!isWallLayer(layer) || !tileInMap(emf, x, y)) return NO_GLASS;
   const graphic = emf.getTile(x, y).gfx[layer];
-  const part = WINDOW_PARTS.get(graphic);
-  if (!WINDOW_DEFINITIONS.has(graphic) && !part) return NO_GLASS;
+  const owner = ownerOf(emf, layer, x, y);
+  if (!WINDOW_DEFINITIONS.has(graphic) && !owner) return NO_GLASS;
   const glass = [];
   const own = windowAt(emf, settings, x, y, layer);
   if (own) glass.push({ light: own, spec: WINDOW_DEFINITIONS.get(graphic) });
-  if (part?.layer === layer) {
-    const owner = windowAt(emf, settings, x + part.dx, y + part.dy, layer);
-    if (owner?.graphic === part.owner) glass.push({ light: owner, spec: part });
-  }
+  const shared = owner && windowAt(emf, settings, owner.x, owner.y, layer);
+  if (shared && shared.graphic === owner.graphic)
+    glass.push({ light: shared, spec: WINDOW_PARTS.get(graphic) });
   return glass;
 }
 
 // Every placed sprite showing a light's glass: its owner and any partner.
 export function windowGlassSprites(emf, light) {
-  const sprites = [
+  return [
     { x: light.x, y: light.y, spec: WINDOW_DEFINITIONS.get(light.graphic) },
+    ...placedParts(emf, light.layer, light.graphic, light.x, light.y).map(
+      ({ x, y, graphic }) => ({ x, y, spec: WINDOW_PARTS.get(graphic) }),
+    ),
   ];
-  for (const part of WINDOW_PARTS.values()) {
-    if (part.owner !== light.graphic || part.layer !== light.layer) continue;
-    const x = light.x - part.dx,
-      y = light.y - part.dy;
-    if (
-      tileInMap(emf, x, y) &&
-      emf.getTile(x, y).gfx[light.layer] === part.graphic
-    )
-      sprites.push({ x, y, spec: part });
-  }
-  return sprites;
 }
 
 /**

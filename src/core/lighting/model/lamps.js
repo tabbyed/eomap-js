@@ -2,6 +2,7 @@ import { finiteRange, hexColor, tileInMap } from "./validation.js";
 import { ASSET_PACK } from "../packs/index.js";
 import { Layer } from "../../data/layer.js";
 import { LightKind } from "./light-kind.js";
+import { ownerOf, partTiles, placedParts } from "./parts.js";
 
 // Lamps and free lights: presets, lookup on the map and settings validation.
 
@@ -74,47 +75,22 @@ export function lampAt(emf, lighting, x, y) {
 }
 
 // A lamp drawn across several tiles, such as a fireplace, lists its other
-// sprites as `parts` at offsets from its own tile. This is the only place a
-// part is tied to its lamp. Only the owner is a lamp: lampAt never answers
-// for a part, so a light is never counted twice.
-const PART_OWNERS = new Map(
-  LAMP_PRESETS.flatMap((preset) =>
-    (preset.parts ?? []).map((part) => [part.graphic, { preset, ...part }]),
-  ),
-);
-
-/**
- * The lamp preset a part graphic belongs to, with the part's offset from its
- * owner ({ preset, graphic, dx, dy }), or null for any other graphic.
- */
-export function lampPart(graphic) {
-  return PART_OWNERS.get(graphic) ?? null;
-}
+// sprites as `parts` (see parts.js). Only the owner is a lamp: lampAt never
+// answers for a part, so a light is never counted twice.
 
 /** The lamp at a tile, or the lamp whose part is drawn there. */
 export function lampOwning(emf, lighting, x, y) {
   const lamp = lampAt(emf, lighting, x, y);
-  if (lamp || !tileInMap(emf, x, y)) return lamp;
-  const part = lampPart(emf.getTile(x, y).gfx[Layer.Objects]);
-  if (!part) return null;
-  const owner = lampAt(emf, lighting, x - part.dx, y - part.dy);
-  return owner?.graphic === part.preset.graphic ? owner : null;
+  if (lamp) return lamp;
+  const owner = ownerOf(emf, Layer.Objects, x, y);
+  const found = owner && lampAt(emf, lighting, owner.x, owner.y);
+  return found?.graphic === owner?.graphic ? found : null;
 }
 
 /** Every object graphic a lamp at (x, y) places: its own, then its parts'. */
 export function lampTiles(preset, x, y, graphic = preset.graphic) {
-  return [
-    { x, y, graphic },
-    ...(preset.parts ?? []).map((part) => ({
-      x: x + part.dx,
-      y: y + part.dy,
-      graphic: part.graphic,
-    })),
-  ];
+  return [{ x, y, graphic }, ...partTiles(Layer.Objects, graphic, x, y)];
 }
-
-const objectAt = (emf, x, y) =>
-  tileInMap(emf, x, y) ? emf.getTile(x, y).gfx[Layer.Objects] : undefined;
 
 /**
  * The tiles a placed lamp actually occupies: its own, and each part drawn
@@ -122,9 +98,10 @@ const objectAt = (emf, x, y) =>
  * object standing where a missing part would go is never removed.
  */
 export function placedLampTiles(emf, lamp) {
-  return lampTiles(lamp, lamp.x, lamp.y, lamp.graphic).filter(
-    (tile, i) => i === 0 || objectAt(emf, tile.x, tile.y) === tile.graphic,
-  );
+  return [
+    { x: lamp.x, y: lamp.y, graphic: lamp.graphic },
+    ...placedParts(emf, Layer.Objects, lamp.graphic, lamp.x, lamp.y),
+  ];
 }
 
 /**
@@ -137,7 +114,7 @@ export function lampFitsAt(emf, preset, x, y, moving = null) {
   return lampTiles(preset, x, y).every(
     (tile) =>
       tileInMap(emf, tile.x, tile.y) &&
-      (!objectAt(emf, tile.x, tile.y) ||
+      (!emf.getTile(tile.x, tile.y).gfx[Layer.Objects] ||
         vacated.some((v) => v.x === tile.x && v.y === tile.y)),
   );
 }

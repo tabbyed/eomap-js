@@ -24,7 +24,9 @@ const {
   flameStep,
 } = require("../src/core/lighting/appearance/flame-animation");
 const { flamePalette } = require("../src/core/lighting/packs/eo-native");
-const { lampPart, lampPreset } = require("../src/core/lighting/model/lamps");
+const { lampPreset } = require("../src/core/lighting/model/lamps");
+const { partOf } = require("../src/core/lighting/model/parts");
+const { Layer } = require("../src/core/data/layer");
 const { EOMap } = require("../src/core/gameobjects/eomap");
 const {
   LightingRenderer,
@@ -50,7 +52,8 @@ const colour = (pixels, x, y) => {
 test("every moving flame belongs to a lamp and uses only its palette", () => {
   for (const [graphic, spec] of FLAMES) {
     // A part's flame belongs to the lamp that lists it as a part.
-    const lamp = lampPreset(graphic) ?? lampPart(graphic)?.preset;
+    const lamp =
+      lampPreset(graphic) ?? lampPreset(partOf(Layer.Objects, graphic)?.owner);
     assert.ok(lamp, `Graphic ${graphic} belongs to no lamp`);
     if (spec.empty || spec.fire) continue;
     assert.ok(spec.frames.length >= 2);

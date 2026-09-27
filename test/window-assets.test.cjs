@@ -137,7 +137,7 @@ test("sources reproject onto the actual glass and start just outside both wall f
       ...[...WINDOW_PARTS.values()]
         .filter((part) => part.owner === definition.graphic)
         .map((part) => [
-          spriteOrigin(part.layer, 4 - part.dx, 5 - part.dy, part.height),
+          spriteOrigin(part.layer, 4 + part.dx, 5 + part.dy, part.height),
           part,
         ]),
     ].map(([origin, { bounds }]) => [

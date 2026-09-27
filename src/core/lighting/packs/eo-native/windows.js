@@ -71,13 +71,14 @@ export const windows = [
   [12, 4, 159, [3, 105, 11, 111], lanternGlass, LANTERN, lanternDefaults],
 ];
 
-// Glass of a window owned by a neighbouring sprite on the same wall layer.
-// The owner sits at (x + dx, y + dy); its settings and light cover both parts.
-// These pairs are always placed together on the native maps.
+// Glass of a window that continues onto a neighbouring sprite on the same
+// wall layer. Like every part (see model/parts.js), the part is drawn at its
+// owner's tile + (dx, dy); the owner's settings and light cover both. These
+// pairs are always placed together on the native maps.
 // graphic, layer, owner graphic, dx, dy, bitmap height, bounds, colours
 export const windowParts = [
-  [4, 3, 3, -1, 0, 320, [0, 218, 15, 273], churchGlass],
-  [6, 3, 5, -1, 0, 515, [0, 413, 15, 468], churchGlass],
-  [10, 4, 9, 0, 1, 320, [0, 260, 6, 286], churchGlass],
-  [12, 4, 13, 0, -1, 159, [31, 92, 32, 113], churchGlass],
+  [4, 3, 3, 1, 0, 320, [0, 218, 15, 273], churchGlass],
+  [6, 3, 5, 1, 0, 515, [0, 413, 15, 468], churchGlass],
+  [10, 4, 9, 0, -1, 320, [0, 260, 6, 286], churchGlass],
+  [12, 4, 13, 0, 1, 159, [31, 92, 32, 113], churchGlass],
 ];
