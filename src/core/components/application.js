@@ -15,7 +15,7 @@ import "./about";
 import "./prompt";
 import "./lighting-panel";
 import { LightingController } from "../controllers/lighting-controller";
-import { saveMapWithLighting } from "../lighting/file/save.js";
+import { saveMapWithLighting } from "../state/lighting-save.js";
 
 import { Startup } from "./startup";
 import { Palette } from "./palette";

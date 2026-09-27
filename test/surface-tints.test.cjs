@@ -7,7 +7,10 @@ const {
   HEIGHT_LEVELS,
   HEIGHT_STEP,
 } = require("../src/core/lighting/field/light-field");
-const { surfaceTints } = require("../src/core/lighting/field/surface-tints");
+const {
+  spriteTint,
+  surfaceTints,
+} = require("../src/core/lighting/field/surface-tints");
 const {
   wallSurfaceVertex,
   wallSurfaceSlices,
@@ -228,4 +231,34 @@ test("tint interpolates exactly as the per-corner sampler it replaced", () => {
     [15.5, 7.25, 600],
   ])
     assert.equal(field.tint(x, y, height), expected(x, y, height));
+});
+
+test("a sprite tint is one sample: a solid wall's outside face halfway up, anything else its tile", () => {
+  const { emf, field } = lit();
+  for (const { tileX: x, tileY: y, layer, frame } of graphics()) {
+    const tint = spriteTint(
+      field,
+      emf,
+      { layer, x, y },
+      frame.width,
+      frame.height,
+    );
+    if (
+      emf.getTile(x, y).gfx[layer] === SOLID &&
+      (layer === 3 || layer === 4)
+    ) {
+      const p = wallSurfaceVertex(
+        layer,
+        x,
+        y,
+        frame.height,
+        frame.width / 2,
+        frame.height / 2,
+      );
+      assert.equal(
+        tint,
+        field.tint(p.sampleX, p.sampleY, Math.max(0, p.height)),
+      );
+    } else assert.equal(tint, field.tint(x, y), `layer ${layer}`);
+  }
 });

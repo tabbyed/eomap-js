@@ -1,4 +1,4 @@
-import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
+import { isRgbaPixels } from "../pixels.js";
 import { HEX_COLOR } from "../model/validation.js";
 import { ASSET_PACK } from "../packs/index.js";
 

@@ -1,5 +1,5 @@
 import { ASSET_PACK } from "../packs/index.js";
-import { Layer } from "../../data/layer.js";
+import { Layer } from "../layer.js";
 import { tileInMap } from "./validation.js";
 
 // Fixtures drawn across several sprites on one layer: an owner graphic and

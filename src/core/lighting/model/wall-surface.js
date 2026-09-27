@@ -1,4 +1,4 @@
-import { Layer } from "../../data/layer.js";
+import { Layer } from "../layer.js";
 // EO tiles project to (32 * (x - y) + 32, 16 * (x + y) + 16).
 // A wall is a continuous vertical plane, even when its art is split across
 // bitmap resources with different heights. Match EOMap's -1px wall offset and

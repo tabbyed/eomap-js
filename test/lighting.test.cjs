@@ -32,7 +32,7 @@ const {
 } = require("../src/core/lighting/field/walls");
 const { LightingCommand } = require("../src/core/command/lighting-command");
 const { MapState } = require("../src/core/state/map-state");
-const { saveMapWithLighting } = require("../src/core/lighting/file/save");
+const { saveMapWithLighting } = require("../src/core/state/lighting-save");
 
 function fixture() {
   const emf = EMF.new(24, 18, "Lamp test");

@@ -15,7 +15,7 @@ const { LightingCommand } = require("../src/core/command/lighting-command");
 const {
   saveMapWithLighting,
   saveLighting,
-} = require("../src/core/lighting/file/save");
+} = require("../src/core/state/lighting-save");
 const { MapState } = require("../src/core/state/map-state");
 const {
   LightingController,

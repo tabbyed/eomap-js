@@ -1,4 +1,4 @@
-import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
+import { isRgbaPixels } from "../pixels.js";
 import { ASSET_PACK } from "../packs/index.js";
 import { isGlowing } from "./lamp-emission.js";
 

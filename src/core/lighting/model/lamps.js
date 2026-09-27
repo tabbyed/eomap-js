@@ -1,6 +1,6 @@
 import { finiteRange, hexColor, tileInMap } from "./validation.js";
 import { ASSET_PACK } from "../packs/index.js";
-import { Layer } from "../../data/layer.js";
+import { Layer } from "../layer.js";
 import { LightKind } from "./light-kind.js";
 import { ownerOf, partTiles, placedParts } from "./parts.js";
 

@@ -1,8 +1,8 @@
 import { wallSurfaceVertex } from "./wall-surface.js";
-import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
+import { isRgbaPixels } from "../pixels.js";
 import { finiteRange, hexColor, tileInMap } from "./validation.js";
 import { ASSET_PACK } from "../packs/index.js";
-import { Layer, isWallLayer } from "../../data/layer.js";
+import { Layer, isWallLayer } from "../layer.js";
 import { LightKind } from "./light-kind.js";
 import { ownerOf, partsOf, placedParts } from "./parts.js";
 

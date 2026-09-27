@@ -3,7 +3,7 @@ import { SOLID_WALL_GRAPHICS, WallGrid } from "./walls.js";
 import { LIGHT_HEIGHT_UNIT, lightSource } from "../model/light-geometry.js";
 import { windowAt } from "../model/windows.js";
 import { tileInMap } from "../model/validation.js";
-import { Layer, isWallLayer } from "../../data/layer.js";
+import { Layer, isWallLayer } from "../layer.js";
 import { LightKind } from "../model/light-kind.js";
 
 export const HEIGHT_STEP = LIGHT_HEIGHT_UNIT;

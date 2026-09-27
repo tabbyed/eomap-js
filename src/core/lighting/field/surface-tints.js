@@ -1,6 +1,6 @@
 import { SOLID_WALL_GRAPHICS } from "./walls.js";
 import { wallSurfaceVertex, wallSurfaceSlices } from "../model/wall-surface.js";
-import { Layer, isWallLayer } from "../../data/layer.js";
+import { Layer, isWallLayer } from "../layer.js";
 
 // The light each drawn graphic shows, as 0xRRGGBB vertex tints:
 // - a solid wall is one upright surface, shaded in strips. `rows` are the
@@ -88,4 +88,29 @@ export function surfaceTints(field, emf, graphic, frame) {
     tints[0] = tints[1] = tints[2] = tints[3] = field.tint(x, y);
   }
   return entry;
+}
+
+/**
+ * One 0xRRGGBB tint for a whole sprite, for renderers that tint sprites
+ * rather than their corners: a solid wall takes the light on its outside
+ * face, halfway up its art, and anything else the light at its tile. Coarser
+ * than surfaceTints, and cheaper: one sample per sprite.
+ */
+export function spriteTint(field, map, shown, frameWidth, frameHeight) {
+  const { layer, x, y } = shown;
+  if (
+    isWallLayer(layer) &&
+    SOLID_WALL_GRAPHICS.has(map.getTile(x, y).gfx[layer])
+  ) {
+    const p = wallSurfaceVertex(
+      layer,
+      x,
+      y,
+      frameHeight,
+      frameWidth / 2,
+      frameHeight / 2,
+    );
+    return field.tint(p.sampleX, p.sampleY, Math.max(0, p.height));
+  }
+  return field.tint(x, y);
 }

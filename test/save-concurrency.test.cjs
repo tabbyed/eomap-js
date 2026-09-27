@@ -7,7 +7,7 @@ const { MapState } = require("../src/core/state/map-state");
 const {
   saveMapWithLighting,
   saveLighting,
-} = require("../src/core/lighting/file/save");
+} = require("../src/core/state/lighting-save");
 const { mapFingerprint } = require("../src/core/lighting/file/lighting-file");
 
 const nextTurn = () => new Promise(setImmediate);
