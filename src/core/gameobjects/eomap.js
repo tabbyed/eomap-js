@@ -783,7 +783,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       let frame = asset.getFrame(this.animationFrame);
       if (asset.animationFrames?.length) showsAnimation = true;
       const lit = this.lighting.prepare(renderTexture, tileGraphic);
-      if (lit?.flame) showsFlames = true;
+      if (lit?.flickers) showsFlames = true;
       if (lit)
         this.lighting.drawBehind(
           renderTexture,
@@ -795,7 +795,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
       this.batchDrawFrame(
         renderTexture,
-        lit?.frame ?? frame,
+        lit?.art ?? frame,
         tileGraphic.x - drawOffsetX,
         tileGraphic.y - drawOffsetY,
         tileGraphic.alpha,

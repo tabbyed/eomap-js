@@ -24,7 +24,10 @@ const {
   flameStep,
 } = require("../src/core/lighting/appearance/flame-animation");
 const { flamePalette } = require("../src/core/lighting/packs/eo-native");
-const { lampPreset } = require("../src/core/lighting/model/lamps");
+const { lampAt, lampPreset } = require("../src/core/lighting/model/lamps");
+const {
+  emissionAppearance,
+} = require("../src/core/lighting/appearance/lamp-emission");
 const { partOf } = require("../src/core/lighting/model/parts");
 const { Layer } = require("../src/core/data/layer");
 const { EOMap } = require("../src/core/gameobjects/eomap");
@@ -378,9 +381,15 @@ test("a lit candle draws its flameless base with the current frame; switched off
   const graphic = candle(map);
   const target = { renderTarget: {} };
   const lit = map.lighting.prepare(target, graphic);
-  assert.equal(lit.frame, "base");
-  assert.ok(/^flame\d$/.test(lit.flame.flame));
-  assert.ok(lit.flicker >= 0.78 && lit.flicker <= 1.12);
+  assert.equal(lit.art, "base");
+  assert.equal(lit.flickers, true);
+  const [flame, core] = lit.overlays;
+  assert.ok(/^flame\d$/.test(flame.frame));
+  assert.equal(core.frame, flame.frame.replace("flame", "core"));
+  // The halo flickers with the flame.
+  const lamp = lampAt(map.emf, map.lighting.settings, 4, 5);
+  const flicker = lit.halo.alpha / emissionAppearance(lamp).haloAlpha;
+  assert.ok(flicker >= 0.78 && flicker <= 1.12);
   const drawn = [];
   map.batchDrawFrame = (_target, frame, x, y, alpha, _graphic, tint) =>
     drawn.push({ frame, x, y, alpha, tint });
@@ -388,23 +397,20 @@ test("a lit candle draws its flameless base with the current frame; switched off
   graphic.y = 50;
   map.lighting.drawOnTop(target, graphic, lit, 0, 0);
   assert.deepEqual(drawn[0], {
-    frame: lit.flame.flame,
+    frame: flame.frame,
     x: 114,
     y: 47,
     alpha: 1,
     tint: 0xffffff,
   });
-  assert.equal(drawn[1].frame, lit.flame.core);
+  assert.equal(drawn[1].frame, core.frame);
   assert.ok(drawn[1].alpha <= 1);
 
-  const lamp = lit.lamp;
   map.lighting.settings = withLight(map.lighting.settings, lamp, {
     ...lamp,
     enabled: false,
   });
-  const off = map.lighting.prepare(target, graphic);
-  assert.equal(off?.frame, undefined);
-  assert.equal(off?.flame, undefined);
+  assert.equal(map.lighting.prepare(target, graphic), null);
 });
 
 test("a fireplace's right-hand half draws its share of the fire in step with its owner", () => {
@@ -424,10 +430,11 @@ test("a fireplace's right-hand half draws its share of the fire in step with its
     map.lighting.flameStep = step;
     const own = map.lighting.prepare(target, owner);
     const share = map.lighting.prepare(target, part);
-    assert.equal(share.lamp.key, own.lamp.key);
-    assert.equal(share.flame, own.flame, "the halves showed different frames");
-    assert.equal(share.flicker, own.flicker);
-    assert.equal(share.emission, null, "only the owner draws the halo");
+    // The same frame, core and flicker: the halves never disagree.
+    assert.deepEqual(share.overlays, own.overlays);
+    assert.equal(share.flickers, true);
+    assert.ok(own.halo);
+    assert.equal(share.halo, null, "only the owner draws the halo");
   }
   map.emf.getTile(4, 5).gfx[1] = 0;
   assert.equal(map.lighting.prepare(target, part), null, "orphaned half");

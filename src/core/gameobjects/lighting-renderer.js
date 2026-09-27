@@ -123,141 +123,142 @@ export class LightingRenderer {
     return true;
   }
 
-  // Emission, flame and glass for one graphic, or null when it has none.
-  // A moving flame also names the still `frame` to draw in place of the art.
+  // What lighting adds to one graphic, in the same shape for every kind of
+  // fixture, or null when it adds nothing:
+  // - art: a frame drawn in place of the graphic's own art (a candle without
+  //   its native flame), or null for its own art;
+  // - halo: an additive glow drawn behind it, at its light source;
+  // - overlays: frames drawn over it in order, each offset (dx, dy) from its
+  //   top-left: a flame, the flame's or bulb's hot core, lit window glass;
+  // - flickers: whether it changes with the flame clock.
+  // Alphas exclude the graphic's own, which drawing applies.
   prepare(renderTexture, graphic) {
-    const object =
-      this.enabled &&
-      renderTexture.renderTarget &&
-      graphic.layer === Layer.Objects;
-    const lamp = object
-      ? lampAt(this.emf, this.settings, graphic.tileX, graphic.tileY)
-      : null;
-    if (object && !lamp) return this.preparePart(graphic);
-    const appearance = lamp && emissionAppearance(lamp);
-    const shown =
-      lamp &&
-      lamp.key !== this.displacedLampKey &&
-      graphic.cacheEntry.resourceID === lamp.graphic + 100 &&
-      !graphic.cacheEntry.loadingComplete;
-    const emission =
-      shown && appearance.enabled ? this.textures.get(lamp.graphic) : null;
-    // A switched-off light keeps the game's still flame.
-    const flame =
-      shown && lamp.enabled !== false && FLAMES.has(lamp.graphic)
-        ? this.textures.getFlame(lamp.graphic)
-        : null;
-    // Prepare masks even with the preview off so unlit panes remain pickable.
+    // Window masks load even while lighting is hidden, so panes can be
+    // picked on the first click.
     const glass = this.windowGlass(graphic);
     for (const item of glass) item.texture = this.textures.getWindow(item.spec);
-    if (!emission && !flame && !glass.length) return null;
-    if (!flame) return { lamp, appearance, emission, glass };
-    const step = this.flameStep;
-    return {
-      lamp,
-      appearance,
-      emission,
-      glass,
-      frame: flame.base,
-      flame: flame.frames[flameFrame(lamp.key, step, flame.frames.length)],
-      flicker: flameFlicker(lamp.key, step),
-    };
+    if (!this.enabled || !renderTexture.renderTarget) return null;
+    const lamp = this.lampShown(graphic);
+    // Most graphics show neither; they cost no allocation per redraw.
+    if (!lamp && !glass.length) return null;
+    const glow = { art: null, halo: null, overlays: [], flickers: false };
+    if (lamp) this.addLampGlow(glow, graphic, lamp);
+    for (const { light, texture } of glass) addPaneGlow(glow, light, texture);
+    return glow.halo || glow.overlays.length ? glow : null;
   }
 
-  // A part of a lamp drawn across tiles, such as a fireplace's right-hand
-  // half, draws its share of its owner's flame in step with it. The owner
-  // alone draws the halo.
-  preparePart(graphic) {
+  // The lamp an object graphic shows, as its owner or as one of its parts
+  // with a flame, or null. A replacement still decoding shows the previous
+  // art, and a lamp being moved shows only at its preview.
+  lampShown(graphic) {
+    if (graphic.layer !== Layer.Objects) return null;
+    const entry = graphic.cacheEntry;
+    const graphicId = entry.resourceID - 100;
+    const x = graphic.tileX,
+      y = graphic.tileY;
+    const own = lampAt(this.emf, this.settings, x, y);
+    const lamp =
+      own ??
+      (FLAMES.has(graphicId)
+        ? lampOwning(this.emf, this.settings, x, y)
+        : null);
+    if (!lamp || entry.loadingComplete || lamp.key === this.displacedLampKey)
+      return null;
+    return own && graphicId !== lamp.graphic ? null : lamp;
+  }
+
+  // A lamp's halo, and its glowing glass or moving flame. A part of a lamp
+  // drawn across tiles, such as a fireplace's right-hand half, draws its
+  // share of its owner's flame in step with it; the owner alone has a halo.
+  addLampGlow(glow, graphic, lamp) {
     const graphicId = graphic.cacheEntry.resourceID - 100;
-    if (!FLAMES.has(graphicId) || graphic.cacheEntry.loadingComplete)
-      return null;
-    const lamp = lampOwning(
-      this.emf,
-      this.settings,
-      graphic.tileX,
-      graphic.tileY,
-    );
-    if (!lamp || lamp.enabled === false || lamp.key === this.displacedLampKey)
-      return null;
-    const flame = this.textures.getFlame(graphicId);
-    if (!flame) return null;
+    const own = graphicId === lamp.graphic;
+    const appearance = emissionAppearance(lamp);
+    // A switched-off light keeps the game's still flame.
+    const flame =
+      lamp.enabled !== false && FLAMES.has(graphicId)
+        ? this.textures.getFlame(graphicId)
+        : null;
     const step = this.flameStep;
-    return {
-      lamp,
-      appearance: emissionAppearance(lamp),
-      emission: null,
-      glass: NO_GLASS,
-      flame: flame.frames[flameFrame(lamp.key, step, flame.frames.length)],
-      flicker: flameFlicker(lamp.key, step),
-    };
+    const flicker = flame ? flameFlicker(lamp.key, step) : 1;
+    const emission =
+      own && appearance.enabled ? this.textures.get(lamp.graphic) : null;
+    if (emission) {
+      const source = projectLight(lamp);
+      glow.halo = {
+        frame: emission.halo,
+        x: source.x - emission.halo.width / 2,
+        y: source.sourceY - emission.halo.height / 2,
+        alpha: appearance.haloAlpha * flicker,
+        tint: appearance.haloColor,
+      };
+    }
+    const core = Math.min(1, appearance.coreAlpha * flicker);
+    if (flame) {
+      const frame =
+        flame.frames[flameFrame(lamp.key, step, flame.frames.length)];
+      if (own) glow.art = flame.base;
+      glow.flickers = true;
+      // A flame is its own light, so scene shading never dims it.
+      glow.overlays.push({
+        frame: frame.flame,
+        dx: frame.x,
+        dy: frame.y,
+        alpha: 1,
+        tint: 0xffffff,
+      });
+      if (appearance.enabled)
+        glow.overlays.push({
+          frame: frame.core,
+          dx: frame.x,
+          dy: frame.y,
+          alpha: core,
+          tint: appearance.coreColor,
+        });
+    } else if (emission)
+      glow.overlays.push({
+        frame: emission.mask,
+        dx: 0,
+        dy: 0,
+        alpha: core,
+        tint: appearance.coreColor,
+      });
   }
 
-  drawBehind(renderTexture, graphic, extras, offsetX, offsetY) {
-    const { lamp, appearance, emission, flicker = 1 } = extras;
-    if (!emission) return;
-    const source = projectLight(lamp);
+  drawBehind(renderTexture, graphic, glow, offsetX, offsetY) {
+    const { halo } = glow;
+    if (!halo) return;
     const renderer = renderTexture.renderer;
     const previousBlend = renderer.currentBlendMode;
     renderer.setBlendMode(Phaser.BlendModes.ADD);
     try {
       this.map.batchDrawFrame(
         renderTexture,
-        emission.halo,
-        source.x - emission.halo.width / 2 - offsetX,
-        source.sourceY - emission.halo.height / 2 - offsetY,
-        appearance.haloAlpha * flicker * graphic.alpha,
+        halo.frame,
+        halo.x - offsetX,
+        halo.y - offsetY,
+        halo.alpha * graphic.alpha,
         null,
-        appearance.haloColor,
+        halo.tint,
       );
     } finally {
       renderer.setBlendMode(previousBlend);
     }
   }
 
-  drawOnTop(renderTexture, graphic, extras, offsetX, offsetY) {
-    const { appearance, emission, flame, flicker = 1, glass } = extras;
+  drawOnTop(renderTexture, graphic, glow, offsetX, offsetY) {
     const x = graphic.x - offsetX,
       y = graphic.y - offsetY;
-    // A flame is its own light, so scene shading never dims it.
-    if (flame)
+    for (const { frame, dx, dy, alpha, tint } of glow.overlays)
       this.map.batchDrawFrame(
         renderTexture,
-        flame.flame,
-        x + flame.x,
-        y + flame.y,
-        graphic.alpha,
+        frame,
+        x + dx,
+        y + dy,
+        alpha * graphic.alpha,
         null,
-        0xffffff,
+        tint,
       );
-    // A moving flame glows through its own frame's core; a still lamp
-    // through its glass.
-    const core = flame
-      ? appearance.enabled && flame.core
-      : emission && emission.mask;
-    if (core)
-      this.map.batchDrawFrame(
-        renderTexture,
-        core,
-        flame ? x + flame.x : x,
-        flame ? y + flame.y : y,
-        Math.min(1, appearance.coreAlpha * flicker) * graphic.alpha,
-        null,
-        appearance.coreColor,
-      );
-    if (!this.enabled || !renderTexture.renderTarget) return;
-    for (const { light, texture } of glass) {
-      const glow = windowAppearance(light);
-      if (!texture || !glow.enabled) continue;
-      this.map.batchDrawFrame(
-        renderTexture,
-        texture.mask,
-        x,
-        y,
-        glow.alpha * graphic.alpha,
-        null,
-        glow.color,
-      );
-    }
   }
 
   batchLitFrame(renderTexture, frame, matrix, alpha, graphic) {
@@ -420,4 +421,17 @@ function batchQuad(
     frame.source.glTexture,
     unit,
   );
+}
+
+// A window pane's glow: its lit glass over the wall art.
+function addPaneGlow(glow, light, texture) {
+  const pane = windowAppearance(light);
+  if (texture && pane.enabled)
+    glow.overlays.push({
+      frame: texture.mask,
+      dx: 0,
+      dy: 0,
+      alpha: pane.alpha,
+      tint: pane.color,
+    });
 }
