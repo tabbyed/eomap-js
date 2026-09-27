@@ -91,12 +91,45 @@ export class WallGrid {
     return result;
   }
 
+  // The same depths, cast on first lookup. A light only reads the rays either
+  // side of each tile within reach, so small lights cast O(min(A, R²)) rays
+  // rather than all A.
+  lazyDepths(light) {
+    return new LazyDepths(this, light);
+  }
+
   static visible(depths, dx, dy, distance) {
     if (!depths || distance < 1e-9) return true;
     const angle = (Math.atan2(dy, dx) + Math.PI * 2) % (Math.PI * 2);
     const index = (angle * SHADOW_RAYS) / (Math.PI * 2);
     const left = Math.floor(index),
       right = (left + 1) % SHADOW_RAYS;
-    return distance < Math.min(depths[left], depths[right]) + 1e-4;
+    return distance < Math.min(depths.at(left), depths.at(right)) + 1e-4;
+  }
+}
+
+class LazyDepths {
+  constructor(walls, light) {
+    this.walls = walls;
+    this.x = light.x;
+    this.y = light.y;
+    this.radius = light.radius;
+    // Cast depths are never negative; Float32 storage matches depths().
+    this.values = new Float32Array(SHADOW_RAYS).fill(-1);
+  }
+
+  at(index) {
+    let depth = this.values[index];
+    if (depth < 0) {
+      this.values[index] = this.walls.ray(
+        this.x,
+        this.y,
+        RAY_X[index],
+        RAY_Y[index],
+        this.radius,
+      );
+      depth = this.values[index];
+    }
+    return depth;
   }
 }

@@ -254,7 +254,9 @@ export class LightField {
     const height = lamp.height ?? 0;
     const source = lightSource(lamp);
     const depths =
-      lamp.shadows === false ? null : this.walls.depths({ ...source, radius });
+      lamp.shadows === false
+        ? null
+        : this.walls.lazyDepths({ ...source, radius });
     const firstHeight = Math.max(0, Math.ceil(height / HEIGHT_STEP - radius));
     const lastHeight = Math.min(
       HEIGHT_LEVELS - 1,

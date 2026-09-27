@@ -112,9 +112,9 @@ test("zero brightness does no visibility work and later activation restores ligh
   const emf = EMF.new(16, 16, "Zero brightness");
   const base = defaultLighting(),
     field = new LightField(emf, base);
-  const originalDepths = field.walls.depths.bind(field.walls);
+  const originalDepths = field.walls.lazyDepths.bind(field.walls);
   let rays = 0;
-  field.walls.depths = (light) => {
+  field.walls.lazyDepths = (light) => {
     rays++;
     return originalDepths(light);
   };
