@@ -74,19 +74,28 @@ export function lampAt(emf, lighting, x, y) {
 }
 
 // A lamp drawn across several tiles, such as a fireplace, lists its other
-// sprites as `parts` at offsets from its own tile. Only the owner is a lamp:
-// lampAt never answers for a part, so a light is never counted twice.
+// sprites as `parts` at offsets from its own tile. This is the only place a
+// part is tied to its lamp. Only the owner is a lamp: lampAt never answers
+// for a part, so a light is never counted twice.
 const PART_OWNERS = new Map(
   LAMP_PRESETS.flatMap((preset) =>
     (preset.parts ?? []).map((part) => [part.graphic, { preset, ...part }]),
   ),
 );
 
+/**
+ * The lamp preset a part graphic belongs to, with the part's offset from its
+ * owner ({ preset, graphic, dx, dy }), or null for any other graphic.
+ */
+export function lampPart(graphic) {
+  return PART_OWNERS.get(graphic) ?? null;
+}
+
 /** The lamp at a tile, or the lamp whose part is drawn there. */
 export function lampOwning(emf, lighting, x, y) {
   const lamp = lampAt(emf, lighting, x, y);
   if (lamp || !tileInMap(emf, x, y)) return lamp;
-  const part = PART_OWNERS.get(emf.getTile(x, y).gfx[Layer.Objects]);
+  const part = lampPart(emf.getTile(x, y).gfx[Layer.Objects]);
   if (!part) return null;
   const owner = lampAt(emf, lighting, x - part.dx, y - part.dy);
   return owner?.graphic === part.preset.graphic ? owner : null;
@@ -102,6 +111,35 @@ export function lampTiles(preset, x, y, graphic = preset.graphic) {
       graphic: part.graphic,
     })),
   ];
+}
+
+const objectAt = (emf, x, y) =>
+  tileInMap(emf, x, y) ? emf.getTile(x, y).gfx[Layer.Objects] : undefined;
+
+/**
+ * The tiles a placed lamp actually occupies: its own, and each part drawn
+ * where it belongs. Deleting or moving a lamp clears only these, so an
+ * object standing where a missing part would go is never removed.
+ */
+export function placedLampTiles(emf, lamp) {
+  return lampTiles(lamp, lamp.x, lamp.y, lamp.graphic).filter(
+    (tile, i) => i === 0 || objectAt(emf, tile.x, tile.y) === tile.graphic,
+  );
+}
+
+/**
+ * Whether a lamp and all its parts fit at (x, y): every tile inside the map
+ * and free of objects, except the tiles that `moving`, the lamp being moved
+ * there, will vacate.
+ */
+export function lampFitsAt(emf, preset, x, y, moving = null) {
+  const vacated = moving ? placedLampTiles(emf, moving) : [];
+  return lampTiles(preset, x, y).every(
+    (tile) =>
+      tileInMap(emf, tile.x, tile.y) &&
+      (!objectAt(emf, tile.x, tile.y) ||
+        vacated.some((v) => v.x === tile.x && v.y === tile.y)),
+  );
 }
 
 export function freeLightAt(emf, lighting, x, y) {

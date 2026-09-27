@@ -7,7 +7,7 @@ import {
   selectedLight,
   withLight,
 } from "../lighting/model/settings.js";
-import { lampTiles, lightSettings } from "../lighting/model/lamps.js";
+import { lightSettings, placedLampTiles } from "../lighting/model/lamps.js";
 import { readLightingFile } from "../lighting/file/lighting-file.js";
 import { LightKind } from "../lighting/model/light-kind.js";
 
@@ -112,7 +112,7 @@ export class LightingController {
             withLight(state.lighting, light, null),
             light.kind === LightKind.Free
               ? []
-              : lampTiles(light, light.x, light.y).map((tile) => ({
+              : placedLampTiles(state.emf, light).map((tile) => ({
                   ...tile,
                   graphic: null,
                 })),

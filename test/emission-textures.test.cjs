@@ -81,6 +81,34 @@ test("a moving flame decodes its sprites once and uploads its base and every fra
   assert.equal(f.invalidations(), 1);
 });
 
+test("a fireplace loads its hearth and the fire it borrows, each from its own file", async () => {
+  const f = fixture();
+  assert.equal(f.cache.getFlame(77), null);
+  // The hearth from the objects file, the campfire from the walls file.
+  assert.deepEqual(
+    f.loads.map(({ file, id }) => [file, id]),
+    [
+      [4, 177],
+      [6, 697],
+    ],
+  );
+  // A dark firebox, and four frames of bright campfire.
+  const hearth = pixels(32, 67);
+  for (let i = 0; i < hearth.data.length; i += 4)
+    hearth.data.set([20, 16, 12, 255], i);
+  const campfire = pixels(160, 30);
+  for (let i = 0; i < campfire.data.length; i += 4)
+    campfire.data.set([240, 150, 40, 255], i);
+  f.loads[0].resolve(hearth);
+  f.loads[1].resolve(campfire);
+  await new Promise(setImmediate);
+  const fire = f.cache.getFlame(77);
+  assert.equal(fire.base, null, "the hearth's own art stays; no base");
+  assert.equal(fire.frames.length, 4);
+  assert.equal(f.textures.length, 4 * 2);
+  assert.ok(fire.frames.every(({ flame }) => flame.pixels.data.some(Boolean)));
+});
+
 test("closing the map during flame decode creates no late GPU resources", async () => {
   const f = fixture();
   f.cache.getFlame(587);

@@ -24,7 +24,7 @@ const {
   flameStep,
 } = require("../src/core/lighting/appearance/flame-animation");
 const { flamePalette } = require("../src/core/lighting/packs/eo-native");
-const { lampPreset } = require("../src/core/lighting/model/lamps");
+const { lampPart, lampPreset } = require("../src/core/lighting/model/lamps");
 const { EOMap } = require("../src/core/gameobjects/eomap");
 const {
   LightingRenderer,
@@ -49,15 +49,8 @@ const colour = (pixels, x, y) => {
 
 test("every moving flame belongs to a lamp and uses only its palette", () => {
   for (const [graphic, spec] of FLAMES) {
-    // A partner sprite's flame belongs to the lamp that lists it as a part.
-    const lamp = spec.owner
-      ? lampPreset(spec.owner.graphic)?.parts?.find(
-          (part) =>
-            part.graphic === graphic &&
-            part.dx === -spec.owner.dx &&
-            part.dy === -spec.owner.dy,
-        )
-      : lampPreset(graphic);
+    // A part's flame belongs to the lamp that lists it as a part.
+    const lamp = lampPreset(graphic) ?? lampPart(graphic)?.preset;
     assert.ok(lamp, `Graphic ${graphic} belongs to no lamp`);
     if (spec.empty || spec.fire) continue;
     assert.ok(spec.frames.length >= 2);
@@ -147,7 +140,7 @@ test("the bent brazier fire moves but never covers bowl it left showing", () => 
       if (y < 16 && x >= 2 && x <= 9)
         lit.data.set(x % 3 ? [158, 189, 226, 255] : [255, 255, 255, 255], i);
     }
-  const { base, frames } = createFlameAnimation(lit, 546, empty);
+  const { base, frames } = createFlameAnimation(lit, 546, { empty });
   const spec = FLAMES.get(546);
   for (let y = 0; y < 20; y++)
     for (let x = 0; x < 12; x++) {
@@ -195,7 +188,7 @@ test("a fireplace borrows fire that shows only through its dark firebox", () => 
   const campfire = sprite(244, 57, [255, 160, 40, 255]);
   for (let x = 0; x < 244; x++)
     campfire.data.set([60, 30, 10, 255], (5 * 244 + x) * 4);
-  const { base, frames } = createFlameAnimation(hearth, 77, campfire);
+  const { base, frames } = createFlameAnimation(hearth, 77, { fire: campfire });
   assert.equal(base, null, "the hearth has no native flame to hide");
   assert.equal(frames.length, 4);
   const spec = FLAMES.get(77);

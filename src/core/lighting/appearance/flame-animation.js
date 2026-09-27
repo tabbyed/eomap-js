@@ -61,17 +61,31 @@ const pixelsOf = (width, height) => ({
  * sprite without its native flame; null when the sprite shows no flame to
  * hide) and frames, each with its colours, a white mask of the pixels that
  * glow, and its offset from the sprite's top-left. A bent flame also needs
- * its `empty` sprite, and a borrowed one the `source` it borrows its fire
- * from. Returns null for other graphics.
+ * the pixels of its `empty` sprite, and a borrowed one those of the `fire`
+ * it borrows (see flameSources). Returns null for other graphics.
  */
-export function createFlameAnimation(pixels, graphic, extra = null) {
+export function createFlameAnimation(pixels, graphic, { empty, fire } = {}) {
   const spec = FLAMES.get(graphic);
   if (!spec) return null;
   if (!isRgbaPixels(pixels))
     throw new TypeError("A flame requires complete RGBA sprite pixels.");
-  if (spec.empty) return bentFlame(spec, pixels, extra);
-  if (spec.fire) return borrowedFlame(spec, pixels, extra);
+  if (spec.empty) return bentFlame(spec, pixels, empty);
+  if (spec.fire) return borrowedFlame(spec, pixels, fire);
   return drawnFlame(spec, pixels);
+}
+
+/**
+ * The resources a graphic's flame is built from, by the name
+ * createFlameAnimation takes them: its own sprite as `pixels`, and any
+ * `empty` sprite or borrowed `fire`. Each is [gfx file, graphic ID].
+ */
+export function flameSources(graphic) {
+  const spec = FLAMES.get(graphic);
+  if (!spec) return null;
+  const sources = { pixels: [4, graphic] };
+  if (spec.empty) sources.empty = [4, spec.empty];
+  if (spec.fire) sources.fire = [spec.fire.file, spec.fire.graphic];
+  return sources;
 }
 
 // Hearth interiors are dark; stonework and logs are lighter and stay in front.
@@ -137,11 +151,6 @@ function drawnFlame(spec, { width, height, data }) {
     return { x: spec.x, y: spec.y, flame, core };
   });
   return { base, frames };
-}
-
-/** The lamp a partner sprite's flame belongs to: { graphic, dx, dy }. */
-export function flameOwner(graphic) {
-  return FLAMES.get(graphic)?.owner ?? null;
 }
 
 function bentFlame(spec, pixels, empty) {

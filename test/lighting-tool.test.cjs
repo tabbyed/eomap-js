@@ -251,3 +251,45 @@ test("moving the pointer redraws only the placement guide, and nothing while sel
   assert.equal(tool.update(), true);
   assert.deepEqual([view.clears, cursor.clears], [3, 5]);
 });
+
+test("a lamp's part ghosts release their graphics when a one-tile lamp is chosen", () => {
+  const { scene } = fixture("lamp");
+  // One counted texture reference per graphic.
+  const entries = new Map();
+  scene.textureCache.getResource = (_file, resource) => {
+    if (!entries.has(resource))
+      entries.set(resource, {
+        loadingComplete: null,
+        refCount: 0,
+        incRef() {
+          this.refCount++;
+        },
+        decRef() {
+          assert.ok(this.refCount > 0, "released twice");
+          this.refCount--;
+        },
+        asset: {
+          getFrame: () => ({ width: 32, height: 64, name: "art", texture: {} }),
+        },
+      });
+    return entries.get(resource);
+  };
+  let state = {
+    mode: "place",
+    preset: "fireplace",
+    selection: null,
+    preview: false,
+    guides: false,
+  };
+  scene.data = { get: () => state };
+  scene.currentPos = { x: 2, y: 2, valid: true };
+  const tool = new LightingTool(scene);
+  tool.update();
+  assert.equal(entries.get(178)?.refCount, 1, "the right-hand half's ghost");
+
+  state = { ...state, preset: "street" };
+  tool.update();
+  assert.equal(entries.get(178).refCount, 0);
+  tool.dispose();
+  assert.ok([...entries.values()].every(({ refCount }) => refCount === 0));
+});

@@ -2,13 +2,14 @@ import { Tool } from "./tool";
 import {
   lampAt,
   lampKey,
+  lampFitsAt,
   lampOwning,
   lampTiles,
+  placedLampTiles,
   freeLightAt,
   lightSettings,
   presetById,
 } from "../lighting/model/lamps.js";
-import { tileInMap } from "../lighting/model/validation.js";
 import { selectedLight, withLight } from "../lighting/model/settings.js";
 import { LightingCommand } from "../command/lighting-command";
 import {
@@ -64,6 +65,8 @@ export class LightingTool extends Tool {
   drawPartGhosts(light, valid) {
     const scene = this.scene;
     const parts = lampTiles(light, light.x, light.y).slice(1);
+    // A lamp with fewer parts than the last one no longer needs the rest.
+    for (const entry of this.partEntries.splice(parts.length)) entry?.decRef();
     parts.forEach((part, i) => {
       const entry = scene.textureCache.getResource(4, part.graphic + 100);
       if (entry !== this.partEntries[i]) {
@@ -90,20 +93,6 @@ export class LightingTool extends Tool {
         .setTint(valid ? 0xffffff : 0xff7070)
         .setVisible(true);
     });
-  }
-
-  // Whether a lamp and all its parts fit at (x, y): every tile in the map
-  // and free of objects, except tiles that the lamp being moved will vacate.
-  lampFits(emf, lamp, x, y, moving = null) {
-    const vacated = moving
-      ? lampTiles(moving, moving.x, moving.y, moving.graphic)
-      : [];
-    return lampTiles(lamp, x, y).every(
-      (tile) =>
-        tileInMap(emf, tile.x, tile.y) &&
-        (!emf.getTile(tile.x, tile.y).gfx[Layer.Objects] ||
-          vacated.some((v) => v.x === tile.x && v.y === tile.y)),
-    );
   }
 
   get state() {
@@ -206,7 +195,7 @@ export class LightingTool extends Tool {
       });
       return;
     }
-    if (preset && !this.lampFits(scene.emf, preset, x, y, origin)) {
+    if (preset && !lampFitsAt(scene.emf, preset, x, y, origin)) {
       this.notify({
         notice: preset.parts?.length
           ? "This lamp covers more than one tile. Choose a spot where they are all empty."
@@ -238,7 +227,7 @@ export class LightingTool extends Tool {
     if (origin) {
       delete lighting.lamps[origin.key];
       tiles.unshift(
-        ...lampTiles(origin, origin.x, origin.y).map((tile) => ({
+        ...placedLampTiles(scene.emf, origin).map((tile) => ({
           ...tile,
           graphic: null,
         })),
@@ -505,7 +494,7 @@ export class LightingTool extends Tool {
         valid =
           light.kind === LightKind.Free
             ? !freeLightAt(scene.emf, settings, light.x, light.y)
-            : this.lampFits(scene.emf, light, light.x, light.y, movedLight);
+            : lampFitsAt(scene.emf, light, light.x, light.y, movedLight);
         const entry =
           light.kind === LightKind.Free
             ? null

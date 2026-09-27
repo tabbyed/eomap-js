@@ -1,12 +1,11 @@
 import { LightField } from "../lighting/field/light-field.js";
-import { lampAt, lampPreset } from "../lighting/model/lamps.js";
+import { lampAt, lampOwning, lampPreset } from "../lighting/model/lamps.js";
 import { projectLight } from "../lighting/model/light-geometry.js";
 import { emissionAppearance } from "../lighting/appearance/lamp-emission.js";
 import {
   FLAMES,
   flameFlicker,
   flameFrame,
-  flameOwner,
   flameStep,
 } from "../lighting/appearance/flame-animation.js";
 import { EmissionTextures } from "./emission-textures.js";
@@ -165,24 +164,20 @@ export class LightingRenderer {
     };
   }
 
-  // A partner sprite of a lamp drawn across tiles, such as a fireplace's
-  // right-hand half, draws its share of its owner's flame in step with it.
-  // The owner alone draws the halo.
+  // A part of a lamp drawn across tiles, such as a fireplace's right-hand
+  // half, draws its share of its owner's flame in step with it. The owner
+  // alone draws the halo.
   preparePart(graphic) {
     const graphicId = graphic.cacheEntry.resourceID - 100;
-    const owner = flameOwner(graphicId);
-    if (!owner || graphic.cacheEntry.loadingComplete) return null;
-    const lamp = lampAt(
+    if (!FLAMES.has(graphicId) || graphic.cacheEntry.loadingComplete)
+      return null;
+    const lamp = lampOwning(
       this.emf,
       this.settings,
-      graphic.tileX + owner.dx,
-      graphic.tileY + owner.dy,
+      graphic.tileX,
+      graphic.tileY,
     );
-    if (
-      lamp?.graphic !== owner.graphic ||
-      lamp.enabled === false ||
-      lamp.key === this.displacedLampKey
-    )
+    if (!lamp || lamp.enabled === false || lamp.key === this.displacedLampKey)
       return null;
     const flame = this.textures.getFlame(graphicId);
     if (!flame) return null;

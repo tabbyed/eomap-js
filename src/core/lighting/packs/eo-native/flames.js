@@ -72,17 +72,9 @@ export const flames = new Map([
   // The fireplace borrows the campfire's flames (wall 597, four frames; its
   // top 24 rows, without the logs) and shows them only through the dark
   // firebox within `window`, so the hearth's own logs and stone stay in front.
-  // The hearth spans two sprites; the right-hand part draws its share on its
-  // own tile, in step with its owner, so draw order never cuts the fire.
+  // The hearth spans two sprites; its lamp lists the right-hand half (78) as
+  // a part, which draws its share of the fire on its own tile, in step with
+  // the hearth, so draw order never cuts the fire.
   [77, { fire: campfire, x: -3, y: 34, window: [14, 25, 31, 58] }],
-  [
-    78,
-    {
-      fire: campfire,
-      x: -35,
-      y: 25,
-      window: [0, 24, 6, 56],
-      owner: { graphic: 77, dx: -1, dy: 0 },
-    },
-  ],
+  [78, { fire: campfire, x: -35, y: 25, window: [0, 24, 6, 56] }],
 ]);
