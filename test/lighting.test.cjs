@@ -13,6 +13,7 @@ const {
   lightSettings,
   serializeLighting,
   parseLighting,
+  readLightingFile,
   LAMP_PRESETS,
 } = require("../src/core/lighting/lamps");
 const {
@@ -98,8 +99,55 @@ test("sidecar round-trip validates the matching map and rejects invalid data", (
     () => parseLighting(JSON.stringify(invalid), emf),
     /Ambient brightness/,
   );
-  emf.getTile(1, 1).gfx[1] = 6;
-  assert.throws(() => parseLighting(text, emf), /different map layout/);
+  const stale = JSON.parse(text);
+  stale.lights["30,2"] = lightSettings(FREE_LIGHT_PRESET);
+  assert.throws(
+    () => parseLighting(JSON.stringify(stale), emf),
+    /outside the map/,
+    "An unchanged map still rejects entries that do not match it",
+  );
+});
+
+test("lighting saved before a map edit keeps every light that still matches", () => {
+  const { emf, lighting } = fixture();
+  emf.getTile(3, 3).gfx[1] = 6;
+  let saved = withLight(lighting, lampAt(emf, lighting, 8, 6), {
+    ...lampAt(emf, lighting, 8, 6),
+    brightness: 0.5,
+  });
+  saved = withLight(saved, lampAt(emf, saved, 3, 3), {
+    ...lampAt(emf, saved, 3, 3),
+    enabled: false,
+  });
+  saved = withLight(saved, { kind: "free", key: "20,15" }, FREE_LIGHT_PRESET);
+  const text = serializeLighting(emf, saved);
+
+  // Paint the floor, remove one lamp and crop away the free light.
+  emf.getTile(0, 0).gfx[0] = 2;
+  emf.getTile(3, 3).gfx[1] = null;
+  const cropped = EMF.new(20, 12, "Lamp test");
+  for (let y = 0; y < 12; y++)
+    for (let x = 0; x < 20; x++)
+      cropped.getTile(x, y).gfx = [...emf.getTile(x, y).gfx];
+
+  const result = readLightingFile(text, cropped);
+  assert.equal(result.mapChanged, true);
+  assert.equal(result.dropped, 2);
+  assert.deepEqual(result.lighting, {
+    ambient: saved.ambient,
+    lamps: { "8,6,7": saved.lamps["8,6,7"] },
+    lights: {},
+    windows: {},
+  });
+  assert.deepEqual(readLightingFile(text, emf).lighting.lights, saved.lights);
+  assert.throws(
+    () =>
+      readLightingFile(
+        JSON.stringify({ version: 1, assetPack: "eo-native" }),
+        emf,
+      ),
+    /Unsupported/,
+  );
 });
 
 test("move is one undoable command preserving both graphics and tuned settings", () => {

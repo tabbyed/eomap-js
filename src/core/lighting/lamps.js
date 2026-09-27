@@ -238,18 +238,30 @@ export function serializeLighting(emf, lighting) {
 }
 
 export function parseLighting(text, emf) {
+  return readLightingFile(text, emf).lighting;
+}
+
+// A map edited since its lighting was saved, here or in another editor, no
+// longer matches the fingerprint. Rejecting the file would orphan every light,
+// so keep each entry whose position and graphic still match and count the
+// rest. On an unchanged map a mismatched entry means a damaged file.
+export function readLightingFile(text, emf) {
   const input = JSON.parse(text);
   if (!input || input.version !== 1 || input.assetPack !== "eo-native")
     throw new Error("Unsupported lighting file or graphics pack.");
-  if (
-    input.map?.width !== emf.width ||
-    input.map?.height !== emf.height ||
-    input.map?.fingerprint !== mapFingerprint(emf)
-  ) {
-    throw new Error(
-      "This lighting file belongs to a different map layout. Open the matching EMF first.",
-    );
-  }
+  if (!input.map || typeof input.map !== "object")
+    throw new Error("Unsupported lighting file or graphics pack.");
+  const mapChanged =
+    input.map.width !== emf.width ||
+    input.map.height !== emf.height ||
+    input.map.fingerprint !== mapFingerprint(emf);
+  let dropped = 0;
+  // Returns true when a stale entry should be skipped.
+  const mismatch = (message) => {
+    if (!mapChanged) throw new Error(message);
+    dropped++;
+    return true;
+  };
   if (
     !input.lamps ||
     typeof input.lamps !== "object" ||
@@ -263,8 +275,11 @@ export function parseLighting(text, emf) {
     if (!/^(0|[1-9]\d*),(0|[1-9]\d*),(0|[1-9]\d*)$/.test(key))
       throw new Error("Invalid lamp position.");
     const [x, y, graphic] = key.split(",").map(Number);
-    if (lampAt(emf, { lamps: {} }, x, y)?.graphic !== graphic)
-      throw new Error("Invalid lamp position or graphic.");
+    if (
+      lampAt(emf, { lamps: {} }, x, y)?.graphic !== graphic &&
+      mismatch("Invalid lamp position or graphic.")
+    )
+      continue;
     lamps[key] = lightSettings({ ...lampPreset(graphic), ...value });
   }
   const lights = {};
@@ -280,8 +295,11 @@ export function parseLighting(text, emf) {
     if (!/^(0|[1-9]\d*),(0|[1-9]\d*)$/.test(key))
       throw new Error("Invalid free light position.");
     const [x, y] = key.split(",").map(Number);
-    if (x >= emf.width || y >= emf.height)
-      throw new Error("Free light is outside the map.");
+    if (
+      (x >= emf.width || y >= emf.height) &&
+      mismatch("Free light is outside the map.")
+    )
+      continue;
     lights[key] = lightSettings(value);
   }
   const windows = {};
@@ -298,11 +316,23 @@ export function parseLighting(text, emf) {
       throw new Error("Invalid window light position or layer.");
     const [x, y, layer, graphic] = key.split(",").map(Number);
     const window = windowAt(emf, { windows: {} }, x, y, layer);
-    if (!window || window.key !== windowKey(x, y, layer, graphic))
-      throw new Error("Window light does not match a window on this map.");
+    if (
+      (!window || window.key !== windowKey(x, y, layer, graphic)) &&
+      mismatch("Window light does not match a window on this map.")
+    )
+      continue;
     windows[key] = windowSettings(value);
   }
-  return { ambient: ambientSettings(input.ambient), lamps, lights, windows };
+  return {
+    lighting: {
+      ambient: ambientSettings(input.ambient),
+      lamps,
+      lights,
+      windows,
+    },
+    mapChanged,
+    dropped,
+  };
 }
 
 // Keys are per placed wall instance, including its face and current graphic.

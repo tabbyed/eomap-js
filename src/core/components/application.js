@@ -21,7 +21,7 @@ import {
   selectedLight,
   withLight,
   lightSettings,
-  parseLighting,
+  readLightingFile,
 } from "../lighting/lamps.js";
 
 import { Startup } from "./startup";
@@ -1068,14 +1068,23 @@ export class Application extends LitElement {
           const file = await handle.getFile();
           if (file.size > 4 * 1024 * 1024)
             throw new Error("Lighting files must be smaller than 4 MB.");
-          const lighting = parseLighting(await file.text(), state.emf);
+          const { lighting, mapChanged, dropped } = readLightingFile(
+            await file.text(),
+            state.emf,
+          );
           if (this.mapState !== state) return;
           this.clearLightingPreview();
           this.commandInvoker.finalizeAggregate();
           this.commandInvoker.add(new LightingCommand(state, lighting));
           state.lightingFileHandle = handle;
+          let notice = "Lighting loaded.";
+          if (dropped)
+            notice = `The map changed since this lighting was saved. Skipped ${dropped} ${dropped === 1 ? "light that no longer matches" : "lights that no longer match"}.`;
+          else if (mapChanged)
+            notice =
+              "Lighting loaded. The map changed since it was saved, but every light still matches.";
           updateTool({
-            notice: "Lighting loaded. Undo restores your previous lighting.",
+            notice: `${notice} Undo restores your previous lighting.`,
           });
           return;
         }
