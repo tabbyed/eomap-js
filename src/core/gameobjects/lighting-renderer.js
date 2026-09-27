@@ -12,11 +12,7 @@ import { EmissionTextures } from "./emission-textures.js";
 import { windowGlassAt } from "../lighting/model/windows.js";
 import { windowAppearance } from "../lighting/appearance/window-emission.js";
 import { pixelHit } from "../gfx/pixel-hit-mask.js";
-import { SOLID_WALL_GRAPHICS } from "../lighting/field/walls.js";
-import {
-  wallSurfaceVertex,
-  wallSurfaceSlices,
-} from "../lighting/model/wall-surface.js";
+import { surfaceTints } from "../lighting/field/surface-tints.js";
 import { Layer, isWallLayer, FIRST_EDITOR_LAYER } from "../data/layer.js";
 
 const NO_GLASS = Object.freeze([]);
@@ -240,89 +236,57 @@ export class LightingRenderer {
     const pipeline = renderTexture.pipeline;
     pipeline.manager.set(pipeline);
     const unit = pipeline.renderer.setTextureSource(frame.source);
-    const field = this.field;
-    const pack = (rgb) => {
-      // MultiPipeline's fragment shader already swizzles the vertex tint.
-      return Phaser.Renderer.WebGL.Utils.getTintAppendFloatAlpha(rgb, alpha);
-    };
-    const x = graphic.tileX,
-      y = graphic.tileY;
-    const tint = (x, y, height = 0) => pack(field.tint(x, y, height));
-    const solidWall =
-      isWallLayer(graphic.layer) &&
-      SOLID_WALL_GRAPHICS.has(this.emf.getTile(x, y).gfx[graphic.layer]);
-    if (solidWall) {
-      // Neighbouring graphics share surface coordinates AND interpolation rows.
-      // Sampling one tile centre across each whole bitmap creates visible seams.
-      const surfaceTint = (px, py) => {
-        const p = wallSurfaceVertex(graphic.layer, x, y, frame.height, px, py);
-        return tint(p.sampleX, p.sampleY, Math.max(0, p.height));
-      };
-      const rows = wallSurfaceSlices(x, y, frame.height);
-      // Adjacent slices share a row, so sample each row's edge tints once.
-      let topLeft = surfaceTint(0, rows[0]),
-        topRight = surfaceTint(frame.width, rows[0]);
-      for (let i = 0; i < rows.length - 1; i++) {
-        const top = rows[i],
-          bottom = rows[i + 1];
-        const bottomLeft = surfaceTint(0, bottom),
-          bottomRight = surfaceTint(frame.width, bottom);
-        pipeline.batchQuad(
-          null,
-          matrix.getX(0, top),
-          matrix.getY(0, top),
-          matrix.getX(0, bottom),
-          matrix.getY(0, bottom),
-          matrix.getX(frame.width, bottom),
-          matrix.getY(frame.width, bottom),
-          matrix.getX(frame.width, top),
-          matrix.getY(frame.width, top),
-          frame.u0,
-          frame.v0 + ((frame.v1 - frame.v0) * top) / frame.height,
-          frame.u1,
-          frame.v0 + ((frame.v1 - frame.v0) * bottom) / frame.height,
-          topLeft,
-          topRight,
-          bottomLeft,
-          bottomRight,
-          0,
-          frame.source.glTexture,
-          unit,
-        );
-        topLeft = bottomLeft;
-        topRight = bottomRight;
-      }
+    const { rows, tints } = surfaceTints(this.field, this.emf, graphic, frame);
+    // MultiPipeline's fragment shader already swizzles the vertex tint.
+    const pack = Phaser.Renderer.WebGL.Utils.getTintAppendFloatAlpha;
+    if (!rows) {
+      batchQuad(
+        pipeline,
+        matrix,
+        frame,
+        unit,
+        0,
+        frame.height,
+        frame.v0,
+        frame.v1,
+        pack(tints[0], alpha),
+        pack(tints[1], alpha),
+        pack(tints[2], alpha),
+        pack(tints[3], alpha),
+      );
       return;
     }
-    let tl, tr, bl, br;
-    if (graphic.layer === Layer.Ground) {
-      tl = pack(field.groundCornerTint(x, y, -1, 0));
-      tr = pack(field.groundCornerTint(x, y, 0, -1));
-      bl = pack(field.groundCornerTint(x, y, 0, 1));
-      br = pack(field.groundCornerTint(x, y, 1, 0));
-    } else tl = tr = bl = br = tint(x, y);
-    pipeline.batchQuad(
-      null,
-      matrix.getX(0, 0),
-      matrix.getY(0, 0),
-      matrix.getX(0, frame.height),
-      matrix.getY(0, frame.height),
-      matrix.getX(frame.width, frame.height),
-      matrix.getY(frame.width, frame.height),
-      matrix.getX(frame.width, 0),
-      matrix.getY(frame.width, 0),
-      frame.u0,
-      frame.v0,
-      frame.u1,
-      frame.v1,
-      tl,
-      tr,
-      bl,
-      br,
-      0,
-      frame.source.glTexture,
-      unit,
-    );
+    // A solid wall: one strip per pair of rows, sharing each row's tints.
+    const { v0, height } = frame,
+      vRange = frame.v1 - v0;
+    let top = rows[0],
+      topV = v0 + (vRange * top) / height,
+      topLeft = pack(tints[0], alpha),
+      topRight = pack(tints[1], alpha);
+    for (let i = 1; i < rows.length; i++) {
+      const bottom = rows[i],
+        bottomV = v0 + (vRange * bottom) / height,
+        bottomLeft = pack(tints[i * 2], alpha),
+        bottomRight = pack(tints[i * 2 + 1], alpha);
+      batchQuad(
+        pipeline,
+        matrix,
+        frame,
+        unit,
+        top,
+        bottom,
+        topV,
+        bottomV,
+        topLeft,
+        topRight,
+        bottomLeft,
+        bottomRight,
+      );
+      top = bottom;
+      topV = bottomV;
+      topLeft = bottomLeft;
+      topRight = bottomRight;
+    }
   }
 
   // Glass shown by a loaded wall graphic, with the light each part belongs
@@ -388,4 +352,44 @@ export class LightingRenderer {
   destroy() {
     this.textures.destroy();
   }
+}
+
+// One textured quad across bitmap rows `top` to `bottom` of `frame`, with
+// texture rows v0 to v1 and a packed tint at each corner.
+function batchQuad(
+  pipeline,
+  matrix,
+  frame,
+  unit,
+  top,
+  bottom,
+  v0,
+  v1,
+  tl,
+  tr,
+  bl,
+  br,
+) {
+  pipeline.batchQuad(
+    null,
+    matrix.getX(0, top),
+    matrix.getY(0, top),
+    matrix.getX(0, bottom),
+    matrix.getY(0, bottom),
+    matrix.getX(frame.width, bottom),
+    matrix.getY(frame.width, bottom),
+    matrix.getX(frame.width, top),
+    matrix.getY(frame.width, top),
+    frame.u0,
+    v0,
+    frame.u1,
+    v1,
+    tl,
+    tr,
+    bl,
+    br,
+    0,
+    frame.source.glTexture,
+    unit,
+  );
 }

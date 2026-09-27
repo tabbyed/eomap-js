@@ -41,6 +41,8 @@ class TileGraphic {
     this.depth = depth;
     this.alpha = alpha;
     this.pendingEntry = null;
+    // Lighting's cached vertex tints for this graphic; see surfaceTints.
+    this.surfaceTints = null;
   }
 
   get width() {

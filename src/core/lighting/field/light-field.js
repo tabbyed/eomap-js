@@ -71,6 +71,9 @@ export class LightField {
     this.walls = new WallGrid(emf);
     this.dirtyWalls = new Set();
     this.preview = null;
+    // Moves whenever a sample could change: a contribution, the ambient light
+    // or a wall edge. Drawn tints stay valid while it holds still.
+    this.revision = 0;
     this.setAmbient(settings.ambient);
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
@@ -101,6 +104,7 @@ export class LightField {
     this.ambient = rgb(ambient.color).map(
       (channel) => channel * ambient.brightness,
     );
+    this.revision++;
   }
 
   setSettings(settings) {
@@ -183,6 +187,8 @@ export class LightField {
 
   flushWalls() {
     if (!this.dirtyWalls.size) return;
+    // Ground corners read wall edges, even where no light is re-traced.
+    this.revision++;
     const preview = this.preview;
     this.setPreview(null);
     const affected = new Set();
@@ -277,6 +283,7 @@ export class LightField {
 
   accumulate(light, sign) {
     if (!light.enabled || light.brightness === 0) return;
+    this.revision++;
     const channels = rgb(light.color);
     const radius = light.radius;
     const radiusSquared = radius * radius;
@@ -348,18 +355,29 @@ export class LightField {
     const low = Math.floor(z),
       high = Math.min(HEIGHT_LEVELS - 1, low + 1),
       fz = z - low;
-    const sample = (tx, ty, c) => {
-      const i = (ty * this.width + tx) * 3 + c;
-      return (
-        this.values[low * this.bandSize + i] * (1 - fz) +
-        this.values[high * this.bandSize + i] * fz
-      );
-    };
+    // Called for every lit vertex, so it allocates nothing: each corner is
+    // an offset into the low band, and the high band sits `span` further on.
+    const values = this.values;
+    const span = (high - low) * this.bandSize;
+    const band = low * this.bandSize;
+    const topLeft = band + (top * this.width + left) * 3,
+      topRight = band + (top * this.width + right) * 3,
+      bottomLeft = band + (bottom * this.width + left) * 3,
+      bottomRight = band + (bottom * this.width + right) * 3;
     let result = 0;
     for (let c = 0; c < 3; c++) {
-      const a = sample(left, top, c) * (1 - fx) + sample(right, top, c) * fx;
+      const a =
+        (values[topLeft + c] * (1 - fz) + values[topLeft + c + span] * fz) *
+          (1 - fx) +
+        (values[topRight + c] * (1 - fz) + values[topRight + c + span] * fz) *
+          fx;
       const b =
-        sample(left, bottom, c) * (1 - fx) + sample(right, bottom, c) * fx;
+        (values[bottomLeft + c] * (1 - fz) +
+          values[bottomLeft + c + span] * fz) *
+          (1 - fx) +
+        (values[bottomRight + c] * (1 - fz) +
+          values[bottomRight + c + span] * fz) *
+          fx;
       const value = Math.round(
         Math.max(0, Math.min(1, this.ambient[c] + a * (1 - fy) + b * fy)) * 255,
       );
