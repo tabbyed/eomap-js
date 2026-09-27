@@ -13,6 +13,9 @@ const {
   saveLighting,
 } = require("../src/core/lighting/save");
 const { MapState } = require("../src/core/state/map-state");
+const {
+  LightingController,
+} = require("../src/core/controllers/lighting-controller");
 const { EMF } = require("../src/core/data/emf");
 
 // Load the real application methods without booting Lit, Spectrum or a GPU.
@@ -29,12 +32,7 @@ const application = ast.program.body.find(
     node.type === "ExportNamedDeclaration" &&
     node.declaration?.id?.name === "Application",
 ).declaration;
-const names = new Set([
-  "clearLightingPreview",
-  "onLightingAction",
-  "save",
-  "saveAs",
-]);
+const names = new Set(["save", "saveAs"]);
 const methods = application.body.body
   .filter((node) => names.has(node.key?.name))
   .map((node) => source.slice(node.start, node.end))
@@ -55,7 +53,17 @@ function fixture() {
   emf.getTile(5, 5).gfx[1] = 7;
   const state = MapState.fromEMF(emf);
   const field = new LightField(emf, state.lighting);
-  state.gameObject = { setLighting: (value) => field.setSettings(value) };
+  state.gameObject = {
+    committed: state.lighting,
+    setLighting(value) {
+      this.committed = value;
+      field.setSettings(value);
+    },
+    previewLighting: (value) => field.setSettings(value),
+    clearLightingPreview() {
+      field.setSettings(this.committed);
+    },
+  };
   const app = Object.assign(new ApplicationMethods(), {
     mapState: state,
     lightingToolState: {
@@ -65,8 +73,8 @@ function fixture() {
     commandInvoker: state.commandInvoker,
     onMapStateChange() {},
     emfPickerOptions: () => ({ kind: "emf" }),
-    lightingPickerOptions: () => ({ kind: "lighting" }),
   });
+  app.lightingController = new LightingController(app);
   return { app, state, field, emf };
 }
 
@@ -78,13 +86,15 @@ test("slider previews replace one contribution directly; committing the visible 
     bakes++;
     accumulate(...args);
   };
-  await app.onLightingAction({
-    detail: { type: "preview-lamp", value: { brightness: 1.7 } },
+  await app.lightingController.handle({
+    type: "preview-lamp",
+    value: { brightness: 1.7 },
   });
   assert.equal(bakes, 2);
   bakes = 0;
-  await app.onLightingAction({
-    detail: { type: "preview-lamp", value: { brightness: 1.8 } },
+  await app.lightingController.handle({
+    type: "preview-lamp",
+    value: { brightness: 1.8 },
   });
   assert.equal(
     bakes,
@@ -97,8 +107,9 @@ test("slider previews replace one contribution directly; committing the visible 
     "previews are not history entries",
   );
   bakes = 0;
-  await app.onLightingAction({
-    detail: { type: "lamp", value: { brightness: 1.8 } },
+  await app.lightingController.handle({
+    type: "lamp",
+    value: { brightness: 1.8 },
   });
   assert.equal(bakes, 0);
   assert.equal(state.commandInvoker.undoStack.length, 1);
@@ -230,7 +241,7 @@ test("a delayed lighting save cannot restore another map's tool selection or pre
   const replacementTool = { mode: "place", preset: "free", selection: null };
   let previewResets = 0;
   replacement.gameObject = {
-    setLighting() {
+    clearLightingPreview() {
       previewResets++;
     },
   };
@@ -245,7 +256,7 @@ test("a delayed lighting save cannot restore another map's tool selection or pre
       return handle;
     },
   };
-  await app.onLightingAction({ detail: { type: "save" } });
+  await app.lightingController.handle({ type: "save" });
   assert.equal(state.lightingFileHandle, handle);
   assert.equal(app.lightingToolState, replacementTool);
   assert.equal(previewResets, 0);
@@ -276,4 +287,38 @@ test("sidecars reject ambiguous or stale lamp identities and export only the sch
   );
   assert.equal(exported.version, 1);
   assert.equal(exported.debug, undefined);
+});
+
+test("an edit lands on the light it was opened for after the selection moves", async () => {
+  const { app, state } = fixture();
+  const target = { kind: "lamp", x: 5, y: 5 };
+  await app.lightingController.handle({
+    type: "preview-lamp",
+    value: { color: "#ff0000" },
+    target,
+  });
+  // The map selection moves before the colour picker reports its value.
+  app.lightingToolState = { ...app.lightingToolState, selection: null };
+  await app.lightingController.handle({
+    type: "lamp",
+    value: { color: "#ff0000" },
+    target,
+  });
+  assert.equal(model.lampAt(state.emf, state.lighting, 5, 5).color, "#ff0000");
+});
+
+test("committing one setting drops a preview of another", async () => {
+  const { app, state, field } = fixture();
+  await app.lightingController.handle({
+    type: "preview-lamp",
+    value: { brightness: 0.2 },
+  });
+  await app.lightingController.handle({
+    type: "ambient",
+    value: { brightness: 0.4 },
+  });
+  assert.equal(model.lampAt(state.emf, state.lighting, 5, 5).brightness, 1.6);
+  const committed = new LightField(state.emf, state.lighting);
+  for (let i = 0; i < field.values.length; i++)
+    assert.ok(Math.abs(field.values[i] - committed.values[i]) < 1e-6);
 });

@@ -744,7 +744,23 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     return this.cachedFrame;
   }
 
+  // `setLighting` takes committed settings and drops any preview, so a
+  // commit or undo can never leave an inspector preview on screen.
   setLighting(settings) {
+    this.committedLighting = settings;
+    this.showLighting(settings);
+  }
+
+  // Show settings that are not committed, such as a slider being dragged.
+  previewLighting(settings) {
+    this.showLighting(settings);
+  }
+
+  clearLightingPreview() {
+    if (this.committedLighting) this.showLighting(this.committedLighting);
+  }
+
+  showLighting(settings) {
     if (this.lightField && this.lightingSettings === settings) return;
     this.lightingSettings = settings;
     if (this.lightField) this.lightField.setSettings(settings);

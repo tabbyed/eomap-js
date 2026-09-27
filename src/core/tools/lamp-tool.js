@@ -55,11 +55,8 @@ export class LampTool extends Tool {
 
   clearPreview() {
     if (this.previewLight) {
-      this.previewField.accumulate(this.previewLight, -1);
-      if (this.displacedLight)
-        this.previewField.accumulate(this.displacedLight, 1);
+      this.previewField.setPreview(null);
       this.previewLight = null;
-      this.displacedLight = null;
       this.scene.map.displacedLampKey = null;
       this.scene.map.invalidateCachedFrame();
     }
@@ -456,12 +453,10 @@ export class LampTool extends Tool {
         if (valid && state.preview) {
           this.previewLight = lamp;
           this.previewField = map.lightField;
-          // A move previews the same source at its destination, not two lamps.
-          this.displacedLight = movedLight;
           map.displacedLampKey =
             movedLight?.kind === "lamp" ? movedLight.key : null;
-          if (movedLight) map.lightField.accumulate(movedLight, -1);
-          map.lightField.accumulate(lamp, 1);
+          // A move previews the same source at its destination, not two lamps.
+          map.lightField.setPreview({ light: lamp, replaces: movedLight });
           map.invalidateCachedFrame();
         }
       }

@@ -381,9 +381,11 @@ export class LightingPanel extends LitElement {
     }
   }
 
-  action(type, value) {
+  // `target` is the light the action edits, the current selection unless
+  // a control was opened for another one.
+  action(type, value, target = this.toolState?.selection) {
     this.dispatchEvent(
-      new CustomEvent("lighting-action", { detail: { type, value } }),
+      new CustomEvent("lighting-action", { detail: { type, value, target } }),
     );
   }
 
@@ -433,9 +435,25 @@ export class LightingPanel extends LitElement {
         aria-label=${label}
         type="color"
         .value=${value}
+        @click=${(event) => {
+          // The picker stays open while the map is clicked, so remember the
+          // light it was opened for.
+          event.target.lightTarget = this.toolState?.selection;
+        }}
         @input=${(event) =>
-          this.action(`preview-${scope}`, { color: event.target.value })}
-        @change=${(event) => this.action(scope, { color: event.target.value })}
+          this.action(
+            `preview-${scope}`,
+            { color: event.target.value },
+            event.target.lightTarget,
+          )}
+        @change=${(event) => {
+          this.action(
+            scope,
+            { color: event.target.value },
+            event.target.lightTarget,
+          );
+          event.target.lightTarget = undefined;
+        }}
     /></label>`;
   }
 

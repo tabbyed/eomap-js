@@ -68,6 +68,7 @@ export class LightField {
     this.sources = new Map();
     this.walls = new WallGrid(emf);
     this.dirtyWalls = new Set();
+    this.preview = null;
     this.setAmbient(settings.ambient);
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
@@ -95,6 +96,8 @@ export class LightField {
   }
 
   setSettings(settings) {
+    // The replaced light may change with the settings; its tool redraws it.
+    this.setPreview(null);
     // A metadata edit can follow a wall command before the next render tick.
     // Finish that geometry batch against its old settings before applying this.
     this.flushWalls();
@@ -155,8 +158,25 @@ export class LightField {
     this.dirtyWalls.add(y * this.width + x);
   }
 
+  // A light shown before it is placed, and the committed light it replaces
+  // while moving. It is kept apart from `sources`, so a wall edit can remove
+  // it against the old walls and restore it against the new ones.
+  setPreview(preview) {
+    this.applyPreview(-1);
+    this.preview = preview?.light ? preview : null;
+    this.applyPreview(1);
+  }
+
+  applyPreview(sign) {
+    if (!this.preview) return;
+    this.accumulate(this.preview.light, sign);
+    if (this.preview.replaces) this.accumulate(this.preview.replaces, -sign);
+  }
+
   flushWalls() {
     if (!this.dirtyWalls.size) return;
+    const preview = this.preview;
+    this.setPreview(null);
     const affected = new Set();
     const changedWindows = new Map();
     const blockers = [];
@@ -201,6 +221,7 @@ export class LightField {
       const light = this.sources.get(key);
       if (light) this.accumulate(light, 1);
     }
+    this.setPreview(preview);
   }
 
   // Add every shadow-casting source that reaches a changed blocker, visiting

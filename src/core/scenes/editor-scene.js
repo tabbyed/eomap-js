@@ -86,10 +86,16 @@ export class EditorScene extends Phaser.Scene {
     );
 
     this.tools = this.createTools();
-    this.data.events.on("changedata-lightingToolState", () => {
-      this.tools.get("lighting").clearPreview();
-      this.map.setLightingPreview(this.data.get("lightingToolState").preview);
-    });
+    this.data.events.on(
+      "changedata-lightingToolState",
+      (_parent, state, previous) => {
+        this.tools.get("lighting").clearPreview();
+        // An inspector preview belongs to the light that was selected.
+        if (state?.selection !== previous?.selection)
+          this.map.clearLightingPreview();
+        this.map.setLightingPreview(state.preview);
+      },
+    );
 
     let cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl({

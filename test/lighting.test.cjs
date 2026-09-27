@@ -527,3 +527,40 @@ test("wall edits near offset lamps match a complete field rebuild", () => {
     }
   }
 });
+
+test("a placement preview survives wall edits and leaves no trace when cleared", () => {
+  const { emf, lighting } = fixture();
+  const field = new LightField(emf, lighting);
+  const lamp = lampAt(emf, lighting, 8, 6);
+  const placed = { ...FREE_LIGHT_PRESET, x: 10, y: 8, key: "10,8" };
+  // Preview moving the lamp while a wall between them is added and removed.
+  field.setPreview({ light: placed, replaces: lamp });
+  for (const graphic of [7, null, 7]) {
+    emf.getTile(9, 7).gfx[3] = graphic;
+    field.queueWall(9, 7);
+    field.flushWalls();
+    const expected = new LightField(emf, lighting);
+    expected.accumulate(placed, 1);
+    expected.accumulate(lamp, -1);
+    for (let i = 0; i < field.values.length; i++)
+      assert.ok(Math.abs(field.values[i] - expected.values[i]) < 1e-6);
+  }
+  field.setPreview(null);
+  const clean = new LightField(emf, lighting);
+  for (let i = 0; i < field.values.length; i++)
+    assert.ok(Math.abs(field.values[i] - clean.values[i]) < 1e-6);
+});
+
+test("changing settings drops a placement preview", () => {
+  const { emf, lighting } = fixture();
+  const field = new LightField(emf, lighting);
+  field.setPreview({ light: { ...FREE_LIGHT_PRESET, x: 3, y: 3, key: "3,3" } });
+  field.setSettings({
+    ...lighting,
+    ambient: { color: "#ffffff", brightness: 0.4 },
+  });
+  assert.equal(field.preview, null);
+  const clean = new LightField(emf, field.settings);
+  for (let i = 0; i < field.values.length; i++)
+    assert.ok(Math.abs(field.values[i] - clean.values[i]) < 1e-6);
+});
