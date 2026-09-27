@@ -2,6 +2,7 @@ import { arrayEquals, binaryInsert, removeFirst } from "../util/array-utils";
 import { TileSpec } from "../data/emf";
 import { GridType } from "../gfx/texture-cache";
 import { LightingRenderer } from "./lighting-renderer.js";
+import { Layer } from "../data/layer.js";
 
 const SECTION_SIZE = 256;
 
@@ -324,7 +325,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       cacheEntry = this.textureCache.getResource(
         fileID,
         resourceID,
-        layer !== 0 && layer !== 7,
+        // Hit masks are for picking, which ground and shadows never block.
+        layer !== Layer.Ground && layer !== Layer.Shadow,
       );
       if (!cacheEntry) {
         console.warn("Could not load gfx %d/%d.", gfx, fileID);

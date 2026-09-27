@@ -1,11 +1,10 @@
 import { Tool } from "./tool";
 import {
-  LAMP_PRESETS,
-  FREE_LIGHT_PRESET,
   lampAt,
   lampKey,
   freeLightAt,
   lightSettings,
+  presetById,
 } from "../lighting/model/lamps.js";
 import { selectedLight, withLight } from "../lighting/model/settings.js";
 import { LightingCommand } from "../command/lighting-command";
@@ -124,11 +123,7 @@ export class LightingTool extends Tool {
       this.notify({ mode: "select" });
       return;
     }
-    const preset =
-      origin ||
-      (state.preset === "free"
-        ? FREE_LIGHT_PRESET
-        : LAMP_PRESETS.find((item) => item.id === state.preset));
+    const preset = origin || presetById(state.preset);
     if (preset?.kind === LightKind.Free) {
       if (freeLightAt(scene.emf, current, x, y)) {
         this.notify({
@@ -427,12 +422,7 @@ export class LightingTool extends Tool {
     const movedLight = state.mode === "move" ? light : null;
     let valid = false;
     if (scene.currentPos.valid) {
-      const preset =
-        state.mode === "move"
-          ? light
-          : state.preset === "free"
-            ? FREE_LIGHT_PRESET
-            : LAMP_PRESETS.find((item) => item.id === state.preset);
+      const preset = state.mode === "move" ? light : presetById(state.preset);
       if (preset) {
         light = {
           enabled: true,

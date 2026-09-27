@@ -3,8 +3,8 @@ import { customElement, property, state } from "lit/decorators.js";
 import { AMBIENT_PRESETS, selectedLight } from "../lighting/model/settings.js";
 import {
   LAMP_PRESETS,
-  FREE_LIGHT_PRESET,
   CHICAGO_AMBER,
+  presetById,
 } from "../lighting/model/lamps.js";
 import scrollbarStyles from "../styles/scrollbar";
 import { LightKind } from "../lighting/model/light-kind.js";
@@ -619,11 +619,7 @@ export class LightingPanel extends LitElement {
         <section>Open or create a map to add lighting.</section>
       </div>`;
     const selected = selectedLight(emf, this.mapState.lighting, tool.selection);
-    const preset =
-      tool.preset === "free"
-        ? FREE_LIGHT_PRESET
-        : LAMP_PRESETS.find((item) => item.id === tool.preset) ||
-          LAMP_PRESETS[0];
+    const preset = presetById(tool.preset) || LAMP_PRESETS[0];
     const ambient = this.mapState.lighting.ambient;
     return html`<div class="scroll">
       <header>

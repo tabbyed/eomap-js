@@ -37,6 +37,15 @@ const PRESETS_BY_GRAPHIC = new Map(
   ]),
 );
 
+const PRESETS_BY_ID = new Map(
+  [FREE_LIGHT_PRESET, ...LAMP_PRESETS].map((preset) => [preset.id, preset]),
+);
+
+// The preset a tool state names: a lamp's id, or "free" for a free light.
+export function presetById(id) {
+  return PRESETS_BY_ID.get(id) ?? null;
+}
+
 export function lampPreset(graphic) {
   return PRESETS_BY_GRAPHIC.get(graphic) || null;
 }

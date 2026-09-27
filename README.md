@@ -9,7 +9,7 @@ An Endless Map File (EMF) editor written in JavaScript.
 
 ## Lighting preview
 
-The `lighting` branch adds **Lighting** beside **Special** in the layer palette (shortcut **L**). Native street lamps, tall lamps, lanterns, garden lanterns, festive lamps, candles, a blue brazier, 30 window styles and the church's wall lantern light up automatically while Lighting is selected, and the candles and brazier flicker; every other tool shows the map as the game draws it. You can add lamps or free lights, tune any light, and save the result to a companion `.lighting.json` file. The EMF itself never changes. Lighting is an editor preview for now; EOWeb integration is still to come.
+**Lighting** sits beside **Special** in the layer palette (shortcut **L**). Native street lamps, tall lamps, lanterns, garden lanterns, festive lamps, candles, a blue brazier, 30 window styles and the church's wall lantern light up automatically while Lighting is selected, and the candles and brazier flicker; every other tool shows the map as the game draws it. You can add lamps or free lights, tune any light, and save the result to a companion `.lighting.json` file. The EMF itself never changes. Lighting is an editor preview for now; EOWeb integration is still to come.
 
 ### How to use it
 
