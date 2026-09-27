@@ -742,7 +742,9 @@ export class Application extends LitElement {
       let onButtonPress = async (buttonIndex) => {
         switch (buttonIndex) {
           case 0:
-            await this.save();
+            // Ask for a lighting file even if one was declined before:
+            // closing would otherwise lose the lighting without warning.
+            await this.save({ askForLightingFile: true });
             if (this.mapState.dirty) {
               // The map failed to save for some reason.
               // Bail out to guard against data loss.
@@ -832,7 +834,7 @@ export class Application extends LitElement {
     }
   }
 
-  async save() {
+  async save({ askForLightingFile = false } = {}) {
     if (!this.mapState.loaded) {
       return;
     }
@@ -844,20 +846,30 @@ export class Application extends LitElement {
       const mapHandle = state.fileHandle;
       const filename = state.filename;
       try {
-        // Obtain both destinations before writing either file. A cancelled picker
-        // must not make a partly saved map look clean.
+        // Obtain both destinations before writing either file. Cancelling the
+        // lighting file still saves the map; lighting stays unsaved, and
+        // later saves stop asking until the user chooses a file.
         if (
-          (state.lightingDirty || state.hasLightingMetadata) &&
-          !state.lightingFileHandle
+          state.needsLightingFile &&
+          (askForLightingFile || !state.lightingFileDeclined)
         ) {
-          const handle = await this.fileSystemProvider.showSaveFilePicker(
+          const handle = await this.pickLightingFile(
             this.lightingController.pickerOptions(),
           );
           if (this.mapState !== state || state.fileHandle !== mapHandle) return;
           state.lightingFileHandle = handle;
+          state.lightingFileDeclined = handle === null;
         }
         await saveMapWithLighting(state);
-        if (this.mapState === state) this.onMapStateChange();
+        if (this.mapState === state) {
+          this.onMapStateChange();
+          if (state.needsLightingFile)
+            this.lightingToolState = {
+              ...this.lightingToolState,
+              notice:
+                "Map saved. Lighting has no file yet, so it wasn't saved. Use Save lighting… to keep it.",
+            };
+        }
       } catch (e) {
         if (e.name === "AbortError") return;
         if (this.mapState !== state || state.fileHandle !== mapHandle) return;
@@ -900,17 +912,20 @@ export class Application extends LitElement {
       );
       if (this.mapState !== state) return;
       let lightingHandle = null;
-      if (state.lightingDirty || state.hasLightingMetadata) {
-        lightingHandle = await this.fileSystemProvider.showSaveFilePicker({
+      if (state.hasLightingMetadata) {
+        lightingHandle = await this.pickLightingFile({
           ...this.lightingController.pickerOptions(),
           suggestedName:
             mapHandle.name.replace(/\.emf$/i, "") + ".lighting.json",
         });
         if (this.mapState !== state) return;
       }
-      // Cancelled pickers leave the original pair of destinations intact.
+      // Cancelling the map picker leaves the original destinations intact.
+      // Cancelling only the lighting file saves the map alone, as in save().
       state.fileHandle = mapHandle;
       state.lightingFileHandle = lightingHandle;
+      state.lightingFileDeclined =
+        state.hasLightingMetadata && lightingHandle === null;
       // This destination pair has no successful save checkpoint yet.
       state.lastSavedCommand = undefined;
       this.onMapStateChange();
@@ -921,6 +936,17 @@ export class Application extends LitElement {
       throw e;
     }
     await this.save();
+  }
+
+  // A cancelled lighting file picker returns null instead of aborting the
+  // map save it belongs to.
+  async pickLightingFile(options) {
+    try {
+      return await this.fileSystemProvider.showSaveFilePicker(options);
+    } catch (e) {
+      if (e.name === "AbortError") return null;
+      throw e;
+    }
   }
 
   async openLightingDemo() {

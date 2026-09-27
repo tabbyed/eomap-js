@@ -16,6 +16,8 @@ export class MapState {
     this.lighting = defaultLighting();
     this.lightingFileHandle = null;
     this.savedLighting = JSON.stringify(this.lighting);
+    // The user cancelled choosing a lighting file; saves write only the map.
+    this.lightingFileDeclined = false;
   }
 
   static fromFileHandle(fileHandle) {
@@ -39,6 +41,7 @@ export class MapState {
     copy.lighting = this.lighting;
     copy.lightingFileHandle = this.lightingFileHandle;
     copy.savedLighting = this.savedLighting;
+    copy.lightingFileDeclined = this.lightingFileDeclined;
     copy.lastSavedCommand = null;
     return copy;
   }
@@ -111,6 +114,11 @@ export class MapState {
 
   get hasLightingMetadata() {
     return this.lightingJson !== JSON.stringify(defaultLighting());
+  }
+
+  // Lighting other than the default is kept in a companion file.
+  get needsLightingFile() {
+    return this.hasLightingMetadata && !this.lightingFileHandle;
   }
 
   get filename() {

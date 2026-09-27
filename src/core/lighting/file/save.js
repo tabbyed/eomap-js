@@ -18,14 +18,10 @@ function enqueueSave(state, write) {
 // Capture both files and the history checkpoint before the first asynchronous
 // write. Edits made while saving remain dirty. A partial failure marks neither
 // file clean, so the user can retry the pair safely.
+//
+// Without a companion file only the map is written. Lighting that needs one
+// stays unsaved rather than blocking the map, until a lighting file is chosen.
 export async function saveMapWithLighting(state) {
-  if (
-    (state.lightingDirty || state.hasLightingMetadata) &&
-    !state.lightingFileHandle
-  )
-    throw new Error(
-      "Choose a companion lighting file before saving lighting changes.",
-    );
   // A drawing aggregate is mutable until finalized. Further brush edits during
   // the asynchronous write must form a new command, not extend this checkpoint.
   state.commandInvoker.finalizeAggregate();
@@ -38,6 +34,8 @@ export async function saveMapWithLighting(state) {
     ? serializeLighting(state.emf, state.lighting)
     : null;
   const savedLighting = JSON.stringify(state.lighting);
+  // Default lighting needs no file, so a map-only save covers it too.
+  const lightingSaved = Boolean(lightingHandle) || !state.hasLightingMetadata;
   const savedCommand = state.currentMapCommand;
   return enqueueSave(state, async () => {
     await mapHandle.write(data);
@@ -47,7 +45,7 @@ export async function saveMapWithLighting(state) {
       state.lightingFileHandle === lightingHandle
     ) {
       state.lastSavedCommand = savedCommand;
-      state.savedLighting = savedLighting;
+      if (lightingSaved) state.savedLighting = savedLighting;
     }
   });
 }

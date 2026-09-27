@@ -21,6 +21,7 @@ const {
   LightingController,
 } = require("../src/core/controllers/lighting-controller");
 const { LightingAction } = require("../src/core/controllers/lighting-actions");
+const { PromptState, PromptType } = require("../src/core/state/prompt-state");
 const { EMF } = require("../src/core/data/emf");
 
 // Load the real application methods without booting Lit, Spectrum or a GPU.
@@ -37,7 +38,7 @@ const application = ast.program.body.find(
     node.type === "ExportNamedDeclaration" &&
     node.declaration?.id?.name === "Application",
 ).declaration;
-const names = new Set(["save", "saveAs"]);
+const names = new Set(["save", "saveAs", "pickLightingFile", "dirtyCheck"]);
 const methods = application.body.body
   .filter((node) => names.has(node.key?.name))
   .map((node) => source.slice(node.start, node.end))
@@ -47,6 +48,8 @@ const dependencies = {
   LightingCommand,
   saveLighting,
   saveMapWithLighting,
+  PromptState,
+  PromptType,
 };
 const ApplicationMethods = new Function(
   ...Object.keys(dependencies),
@@ -122,33 +125,62 @@ test("slider previews replace one contribution directly; committing the visible 
   assert.equal(model.lampAt(state.emf, state.lighting, 5, 5).brightness, 1.6);
 });
 
-test("cancelling the companion Save As picker retains both original destinations", async () => {
-  const { app, state } = fixture();
+function abort() {
+  const error = new Error("Cancelled");
+  error.name = "AbortError";
+  return error;
+}
+
+function night(state) {
   state.lighting = {
     ...state.lighting,
     ambient: { brightness: 0.3, color: "#ffffff" },
   };
+}
+
+test("cancelling the Save As map picker retains both original destinations", async () => {
+  const { app, state } = fixture();
+  night(state);
   const originalMap = (state.fileHandle = { name: "old.emf" });
   const originalLighting = (state.lightingFileHandle = {
     name: "old.lighting.json",
   });
+  let saves = 0;
+  app.fileSystemProvider = {
+    async showSaveFilePicker() {
+      throw abort();
+    },
+  };
+  app.save = async () => saves++;
+  await app.saveAs();
+  assert.equal(saves, 0);
+  assert.equal(state.fileHandle, originalMap);
+  assert.equal(state.lightingFileHandle, originalLighting);
+});
+
+test("cancelling only the companion Save As picker still saves the map", async () => {
+  const { app, state } = fixture();
+  night(state);
+  state.fileHandle = { name: "old.emf" };
+  state.lightingFileHandle = { name: "old.lighting.json" };
+  const newMap = { name: "new.emf" };
   let picks = 0,
     saves = 0;
   app.fileSystemProvider = {
     async showSaveFilePicker(options) {
-      if (++picks === 1) return { name: "new.emf" };
+      if (++picks === 1) return newMap;
       assert.equal(options.suggestedName, "new.lighting.json");
-      const error = new Error("Cancelled");
-      error.name = "AbortError";
-      throw error;
+      throw abort();
     },
   };
   app.save = async () => saves++;
   await app.saveAs();
   assert.equal(picks, 2);
-  assert.equal(saves, 0);
-  assert.equal(state.fileHandle, originalMap);
-  assert.equal(state.lightingFileHandle, originalLighting);
+  assert.equal(saves, 1);
+  assert.equal(state.fileHandle, newMap);
+  // Lighting is not written beside the old map; later saves stop asking.
+  assert.equal(state.lightingFileHandle, null);
+  assert.equal(state.lightingFileDeclined, true);
 });
 
 test("Save As cannot attach a delayed destination to a newly opened map", async () => {
@@ -186,21 +218,124 @@ test("a failed Save As remains dirty even when the original files were already s
   assert.equal(state.dirty, true);
 });
 
-test("saving cannot silently discard lighting when no companion destination exists", async () => {
+test("without a lighting file, saving writes the map and keeps lighting unsaved", async () => {
   const { state } = fixture();
-  state.lighting = {
-    ...state.lighting,
-    ambient: { color: "#ffffff", brightness: 0.3 },
-  };
+  night(state);
   let writes = 0;
   state.fileHandle = {
     async write() {
       writes++;
     },
   };
-  await assert.rejects(saveMapWithLighting(state), /companion/);
-  assert.equal(writes, 0);
+  await saveMapWithLighting(state);
+  assert.equal(writes, 1);
+  assert.equal(state.lastSavedCommand, state.currentMapCommand);
+  assert.equal(state.lightingDirty, true);
   assert.equal(state.dirty, true);
+});
+
+test("default lighting needs no file, so a map-only save leaves nothing unsaved", async () => {
+  const { app, state } = fixture();
+  night(state);
+  state.saved();
+  state.lighting = model.defaultLighting();
+  assert.equal(state.lightingDirty, true);
+  let picks = 0;
+  app.fileSystemProvider = {
+    async showSaveFilePicker() {
+      picks++;
+    },
+  };
+  state.fileHandle = { name: "map.emf", async write() {} };
+  await app.save();
+  assert.equal(picks, 0);
+  assert.equal(state.dirty, false);
+});
+
+test("declining the lighting file saves the map, and later saves stop asking", async () => {
+  const { app, state } = fixture();
+  night(state);
+  let mapWrites = 0,
+    picks = 0;
+  state.fileHandle = {
+    name: "map.emf",
+    async write() {
+      mapWrites++;
+    },
+  };
+  app.fileSystemProvider = {
+    async showSaveFilePicker(options) {
+      picks++;
+      assert.equal(options.suggestedName, "map.lighting.json");
+      throw abort();
+    },
+  };
+  await app.save();
+  assert.equal(picks, 1);
+  assert.equal(mapWrites, 1);
+  assert.equal(state.lastSavedCommand, state.currentMapCommand);
+  assert.equal(state.lightingDirty, true);
+  assert.equal(state.lightingFileDeclined, true);
+  assert.match(app.lightingToolState.notice, /Lighting has no file yet/);
+
+  await app.save();
+  assert.equal(picks, 1, "a declined lighting file is not asked for again");
+  assert.equal(mapWrites, 2);
+
+  // Choosing a file later saves both and clears the lighting changes.
+  let lightingWrites = 0;
+  app.fileSystemProvider = {
+    async showSaveFilePicker() {
+      picks++;
+      return {
+        name: "map.lighting.json",
+        async write() {
+          lightingWrites++;
+        },
+      };
+    },
+  };
+  await app.save({ askForLightingFile: true });
+  assert.equal(picks, 2);
+  assert.equal(lightingWrites, 1);
+  assert.equal(state.lightingFileDeclined, false);
+  assert.equal(state.dirty, false);
+});
+
+test("saving from the unsaved-changes prompt asks again for a declined lighting file", async () => {
+  const { app, state } = fixture();
+  night(state);
+  state.fileHandle = { name: "map.emf", async write() {} };
+  state.lightingFileDeclined = true;
+  let prompt = null,
+    picks = 0,
+    continued = 0;
+  app.showPrompt = (value) => (prompt = value);
+  app.fileSystemProvider = {
+    async showSaveFilePicker() {
+      picks++;
+      throw abort();
+    },
+  };
+  app.dirtyCheck(() => continued++);
+  assert.equal(prompt.type, PromptType.Warning);
+  await prompt.onButtonPress(0);
+  assert.equal(picks, 1);
+  // Declining again saved the map, but the lighting would be lost: stay put.
+  assert.equal(state.lastSavedCommand, state.currentMapCommand);
+  assert.equal(continued, 0);
+
+  app.fileSystemProvider = {
+    async showSaveFilePicker() {
+      picks++;
+      return { name: "map.lighting.json", async write() {} };
+    },
+  };
+  app.dirtyCheck(() => continued++);
+  await prompt.onButtonPress(0);
+  assert.equal(picks, 2);
+  assert.equal(state.dirty, false);
+  assert.equal(continued, 1);
 });
 
 test("a delayed save failure cannot show a retry prompt for another map", async () => {
