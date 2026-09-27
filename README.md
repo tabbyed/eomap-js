@@ -15,7 +15,7 @@ You can add lamps or free lights, tune any light, and save the result to a compa
 
 ![The fireplace room at night, its fire and a shelf candle flickering on the walls](docs/images/lighting/flames.gif)
 
-The same file lights the map in game. [EOWeb](https://github.com/tabbyed/eoweb) loads it beside each map and draws it with this editor's lighting core, so a room looks the same in both:
+The same file lights the map in game. [EOWeb](https://github.com/tabbyed/eoweb) loads it beside each map and draws it with this editor's lighting core, so a room looks the same in both. You can see it running on [Tabbyed's server](https://lighting.forestrift.com/), where the light also follows the server's time of day:
 
 ![The same room in the editor's lighting preview and in EOWeb](docs/images/lighting/editor-and-eoweb.png)
 
