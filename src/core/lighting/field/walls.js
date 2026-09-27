@@ -1,4 +1,4 @@
-import { ASSET_PACK } from "./packs/index.js";
+import { ASSET_PACK } from "../packs/index.js";
 
 // Graphics that block light; see the pack catalogue for how they were chosen.
 export const SOLID_WALL_GRAPHICS = new Set(ASSET_PACK.solidWalls);

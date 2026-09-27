@@ -1,7 +1,7 @@
 import { wallSurfaceVertex } from "./wall-surface.js";
-import { isRgbaPixels } from "../gfx/pixel-hit-mask.js";
+import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
 import { finiteRange, hexColor, tileInMap } from "./validation.js";
-import { ASSET_PACK } from "./packs/index.js";
+import { ASSET_PACK } from "../packs/index.js";
 
 export const WINDOW_DEFAULTS = Object.freeze({
   enabled: true,

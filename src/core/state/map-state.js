@@ -1,5 +1,5 @@
 import { CommandInvoker } from "../command/command";
-import { defaultLighting } from "../lighting/lamps.js";
+import { defaultLighting } from "../lighting/model/settings.js";
 
 export class MapState {
   constructor() {

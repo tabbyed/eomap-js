@@ -3,14 +3,14 @@ const { test } = require("node:test");
 
 require("../scripts/register-core.cjs");
 const { EMF } = require("../src/core/data/emf");
+const { defaultLighting } = require("../src/core/lighting/model/settings");
 const {
-  defaultLighting,
   FREE_LIGHT_PRESET,
   lightSettings,
-} = require("../src/core/lighting/lamps");
-const { LightField } = require("../src/core/lighting/light-field");
-const { lightSource } = require("../src/core/lighting/light-geometry");
-const { windowAt } = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/model/lamps");
+const { LightField } = require("../src/core/lighting/field/light-field");
+const { lightSource } = require("../src/core/lighting/model/light-geometry");
+const { windowAt } = require("../src/core/lighting/model/windows");
 
 const owner = { x: 8, y: 8 };
 const graphics = { 3: 477, 4: 474 };

@@ -1,6 +1,6 @@
-import { WINDOW_DEFAULTS } from "./windows.js";
-import { HEX_COLOR } from "./validation.js";
-import { isRgbaPixels } from "../gfx/pixel-hit-mask.js";
+import { WINDOW_DEFAULTS } from "../model/windows.js";
+import { HEX_COLOR } from "../model/validation.js";
+import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
 
 // Window glow is the appearance of its glass. Brightness controls outdoor
 // illumination separately, so a softly glowing room need not light the street.

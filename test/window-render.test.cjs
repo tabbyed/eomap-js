@@ -24,12 +24,12 @@ const {
   LightingRenderer,
 } = require("../src/core/gameobjects/lighting-renderer");
 const { EMF } = require("../src/core/data/emf");
-const { defaultLighting } = require("../src/core/lighting/lamps");
+const { defaultLighting } = require("../src/core/lighting/model/settings");
 const {
   WINDOW_DEFINITIONS,
   WINDOW_PARTS,
   createWindowMask,
-} = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/model/windows");
 const { createPixelHitMask } = require("../src/core/gfx/pixel-hit-mask");
 
 function entryFor(graphic, glassX, glassY) {

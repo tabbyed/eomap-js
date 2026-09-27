@@ -12,16 +12,18 @@ const { EOReader } = require("../src/core/data/eo-reader");
 const {
   LightField,
   HEIGHT_LEVELS,
-} = require("../src/core/lighting/light-field");
-const { SHADOW_RAYS } = require("../src/core/lighting/walls");
+} = require("../src/core/lighting/field/light-field");
+const { SHADOW_RAYS } = require("../src/core/lighting/field/walls");
 const {
   defaultLighting,
+  withLight,
+} = require("../src/core/lighting/model/settings");
+const {
   lampAt,
   lightSettings,
-  withLight,
   FREE_LIGHT_PRESET,
-} = require("../src/core/lighting/lamps");
-const { windowAt } = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/model/lamps");
+const { windowAt } = require("../src/core/lighting/model/windows");
 
 const { values: args } = parseArgs({
   options: {

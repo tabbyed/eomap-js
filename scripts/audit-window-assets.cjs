@@ -8,7 +8,7 @@
 // is already catalogued, and whether it satisfies the single-sprite rules:
 // complete within the 32 px sprite, and a colour that selects only glass
 // within its bounds. It then verifies the whole catalogue in
-// src/core/lighting/windows.js, including textured glass and windows split
+// src/core/lighting/packs/eo-native.js, including textured glass and windows split
 // across two sprites, and --write regenerates docs/window-assets.json.
 require("./register-core.cjs");
 const fs = require("node:fs");
@@ -22,7 +22,7 @@ const {
   WINDOW_DEFINITIONS,
   WINDOW_PARTS,
   createWindowMask,
-} = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/model/windows");
 
 const { values: args } = parseArgs({
   options: {

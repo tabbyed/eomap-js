@@ -1,139 +1,15 @@
-import { windowAt, windowKey, windowSettings } from "./windows.js";
-import { finiteRange, hexColor, tileInMap } from "./validation.js";
-import { ASSET_PACK } from "./packs/index.js";
+import {
+  lampAt,
+  freeLightAt,
+  lampPreset,
+  lightSettings,
+} from "../model/lamps.js";
+import { windowAt, windowKey, windowSettings } from "../model/windows.js";
+import { ambientSettings } from "../model/settings.js";
+import { ASSET_PACK } from "../packs/index.js";
 
-// Lamp presets come from the pack catalogue. Other packs can override them.
-export const CHICAGO_AMBER = ASSET_PACK.chicagoAmber;
-export const LAMP_PRESETS = ASSET_PACK.lamps;
-
-export const AMBIENT_PRESETS = {
-  day: { name: "Day", brightness: 1, color: "#ffffff" },
-  dusk: { name: "Dusk", brightness: 0.55, color: "#c2b7ed" },
-  night: { name: "Night", brightness: 0.3, color: "#97b5ed" },
-};
-
-export const FREE_LIGHT_PRESET = {
-  id: "free",
-  name: "Free light",
-  radius: 4,
-  color: "#ffcf88",
-  brightness: 1,
-  glow: 0,
-  enabled: true,
-  height: 0,
-  shadows: true,
-  kind: "free",
-  description: "Light any tile without adding a graphic",
-};
-
-// Called for every object graphic on each placement and redraw.
-const PRESETS_BY_GRAPHIC = new Map(
-  LAMP_PRESETS.flatMap((preset) =>
-    [preset.graphic, ...(preset.variants ?? [])].map((graphic) => [
-      graphic,
-      preset,
-    ]),
-  ),
-);
-
-export function lampPreset(graphic) {
-  return PRESETS_BY_GRAPHIC.get(graphic) || null;
-}
-
-export function lampKey(x, y, graphic) {
-  return `${x},${y},${graphic}`;
-}
-
-export function defaultLighting() {
-  return {
-    ambient: { brightness: 1, color: "#ffffff" },
-    lamps: {},
-    lights: {},
-    windows: {},
-  };
-}
-
-export function lampAt(emf, lighting, x, y) {
-  if (!tileInMap(emf, x, y)) return null;
-  const graphic = emf.getTile(x, y).gfx[1];
-  const preset = lampPreset(graphic);
-  if (!preset) return null;
-  const key = lampKey(x, y, graphic);
-  return {
-    ...preset,
-    enabled: true,
-    shadows: true,
-    ...lighting.lamps[key],
-    x,
-    y,
-    key,
-    graphic,
-    kind: "lamp",
-  };
-}
-
-export function freeLightAt(emf, lighting, x, y) {
-  if (!tileInMap(emf, x, y)) return null;
-  const key = `${x},${y}`;
-  const settings = lighting.lights?.[key];
-  return settings ? { ...FREE_LIGHT_PRESET, ...settings, x, y, key } : null;
-}
-
-export function selectedLight(emf, lighting, selection) {
-  if (!selection) return null;
-  if (selection.kind === "window")
-    return windowAt(emf, lighting, selection.x, selection.y, selection.layer);
-  return selection.kind === "free"
-    ? freeLightAt(emf, lighting, selection.x, selection.y)
-    : lampAt(emf, lighting, selection.x, selection.y);
-}
-
-export function withLight(lighting, light, settings) {
-  const collection =
-    light.kind === "window"
-      ? "windows"
-      : light.kind === "free"
-        ? "lights"
-        : "lamps";
-  const entries = { ...lighting[collection] };
-  if (settings)
-    entries[light.key] =
-      light.kind === "window"
-        ? windowSettings(settings)
-        : lightSettings(settings);
-  else delete entries[light.key];
-  return { ...lighting, [collection]: entries };
-}
-
-const color = (value) =>
-  hexColor(value, "Choose a six-digit colour, such as #ffcf88.");
-
-export function lightSettings(value) {
-  if (!value || typeof value !== "object")
-    throw new Error("Missing light settings.");
-  if (typeof value.enabled !== "boolean")
-    throw new Error("Missing light enabled state.");
-  if (value.shadows !== undefined && typeof value.shadows !== "boolean")
-    throw new Error("Invalid wall interaction setting.");
-  return {
-    radius: finiteRange(value.radius, 1, 12, "Light reach"),
-    brightness: finiteRange(value.brightness, 0, 2, "Light brightness"),
-    glow: finiteRange(value.glow ?? 1, 0, 2, "Bulb glow"),
-    color: color(value.color),
-    enabled: value.enabled,
-    height: finiteRange(value.height ?? 0, 0, 192, "Source height"),
-    shadows: value.shadows ?? true,
-  };
-}
-
-export function ambientSettings(value) {
-  if (!value || typeof value !== "object")
-    throw new Error("Missing ambient settings.");
-  return {
-    brightness: finiteRange(value.brightness, 0.15, 1, "Ambient brightness"),
-    color: color(value.color),
-  };
-}
+// The companion .lighting.json file: serializing, parsing and matching it
+// against the map it was saved for.
 
 // Fingerprint only graphics/layout: changing music or a sign doesn't detach lights.
 export function mapFingerprint(emf) {

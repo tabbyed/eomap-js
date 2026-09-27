@@ -1,12 +1,12 @@
 import { LightingCommand } from "../command/lighting-command";
-import { saveLighting } from "../lighting/save.js";
+import { saveLighting } from "../lighting/file/save.js";
 import {
   ambientSettings,
-  lightSettings,
-  readLightingFile,
   selectedLight,
   withLight,
-} from "../lighting/lamps.js";
+} from "../lighting/model/settings.js";
+import { lightSettings } from "../lighting/model/lamps.js";
+import { readLightingFile } from "../lighting/file/lighting-file.js";
 
 const MAX_LIGHTING_FILE_SIZE = 4 * 1024 * 1024;
 
@@ -56,7 +56,7 @@ export class LightingController {
     const state = host.mapState;
     if (!state.loaded) return;
     const selection = target ?? host.lightingToolState.selection;
-    const lamp = selectedLight(state.emf, state.lighting, selection);
+    const light = selectedLight(state.emf, state.lighting, selection);
     const updateTool = (patch) => {
       if (host.mapState !== state) return;
       this.clearPreview();
@@ -84,37 +84,37 @@ export class LightingController {
           updateTool({ mode: "select", duplicate: null });
           return;
         case "window-default":
-          if (lamp?.kind !== "window") return;
-          this.commit(state, withLight(state.lighting, lamp, null));
+          if (light?.kind !== "window") return;
+          this.commit(state, withLight(state.lighting, light, null));
           updateTool({
-            notice: `${lamp.name} reset. Undo restores your settings.`,
+            notice: `${light.name} reset. Undo restores your settings.`,
           });
           return;
         case "move":
-          if (lamp && lamp.kind !== "window") updateTool({ mode: "move" });
+          if (light && light.kind !== "window") updateTool({ mode: "move" });
           return;
         case "duplicate":
-          if (lamp && lamp.kind !== "window")
+          if (light && light.kind !== "window")
             updateTool({
               mode: "place",
-              preset: lamp.id,
-              duplicate: lightSettings(lamp),
+              preset: light.id,
+              duplicate: lightSettings(light),
             });
           return;
         case "delete":
-          if (!lamp || lamp.kind === "window") return;
+          if (!light || light.kind === "window") return;
           this.commit(
             state,
-            withLight(state.lighting, lamp, null),
-            lamp.kind === "free"
+            withLight(state.lighting, light, null),
+            light.kind === "free"
               ? []
-              : [{ x: lamp.x, y: lamp.y, graphic: null }],
+              : [{ x: light.x, y: light.y, graphic: null }],
           );
           updateTool({
             selection: null,
             mode: "select",
             notice:
-              lamp.kind === "free"
+              light.kind === "free"
                 ? "Free light deleted. Undo restores it."
                 : "Lamp deleted. Undo restores the lamp and its light.",
           });
@@ -123,7 +123,7 @@ export class LightingController {
         case "preview-lamp":
         case "ambient":
         case "preview-ambient":
-          this.edit(state, type, lamp, value);
+          this.edit(state, type, light, value);
           return;
         case "load":
           await this.load(state, updateTool);
@@ -137,14 +137,14 @@ export class LightingController {
     }
   }
 
-  edit(state, type, lamp, value) {
-    if (type.endsWith("lamp") && !lamp) return;
+  edit(state, type, light, value) {
+    if (type.endsWith("lamp") && !light) return;
     const next = type.endsWith("ambient")
       ? {
           ...state.lighting,
           ambient: ambientSettings({ ...state.lighting.ambient, ...value }),
         }
-      : withLight(state.lighting, lamp, { ...lamp, ...value });
+      : withLight(state.lighting, light, { ...light, ...value });
     const scene = this.host.editor?.game?.scene.getScene("editor");
     scene?.tools?.get("lighting")?.clearPreview();
     // Move straight from the displayed preview to the next one; the light

@@ -5,27 +5,31 @@ require("../scripts/register-core.cjs");
 const { EMF } = require("../src/core/data/emf");
 const {
   defaultLighting,
-  lampAt,
-  freeLightAt,
   selectedLight,
   withLight,
+} = require("../src/core/lighting/model/settings");
+const {
+  lampAt,
+  freeLightAt,
   FREE_LIGHT_PRESET,
   lightSettings,
+  LAMP_PRESETS,
+} = require("../src/core/lighting/model/lamps");
+const {
   serializeLighting,
   parseLighting,
   readLightingFile,
-  LAMP_PRESETS,
-} = require("../src/core/lighting/lamps");
+} = require("../src/core/lighting/file/lighting-file");
 const {
   lightSource,
   projectLight,
   lightGroundRadius,
-} = require("../src/core/lighting/light-geometry");
-const { LightField } = require("../src/core/lighting/light-field");
-const { WallGrid } = require("../src/core/lighting/walls");
+} = require("../src/core/lighting/model/light-geometry");
+const { LightField } = require("../src/core/lighting/field/light-field");
+const { WallGrid } = require("../src/core/lighting/field/walls");
 const { LightingCommand } = require("../src/core/command/lighting-command");
 const { MapState } = require("../src/core/state/map-state");
-const { saveMapWithLighting } = require("../src/core/lighting/save");
+const { saveMapWithLighting } = require("../src/core/lighting/file/save");
 
 function fixture() {
   const emf = EMF.new(24, 18, "Lamp test");

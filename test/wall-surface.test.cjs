@@ -4,7 +4,7 @@ require("../scripts/register-core.cjs");
 const {
   wallSurfaceVertex,
   wallSurfaceSlices,
-} = require("../src/core/lighting/wall-surface");
+} = require("../src/core/lighting/model/wall-surface");
 
 function spritePoint(layer, tileX, tileY, height, px, py) {
   return {

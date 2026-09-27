@@ -1,6 +1,6 @@
-import { isRgbaPixels } from "../gfx/pixel-hit-mask.js";
-import { HEX_COLOR } from "./validation.js";
-import { ASSET_PACK } from "./packs/index.js";
+import { isRgbaPixels } from "../../gfx/pixel-hit-mask.js";
+import { HEX_COLOR } from "../model/validation.js";
+import { ASSET_PACK } from "../packs/index.js";
 
 // Each lamp's glass region, from the pack catalogue.
 const GLASS_REGIONS = ASSET_PACK.bulbGlass;

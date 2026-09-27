@@ -6,10 +6,12 @@ const {
   defaultLighting,
   selectedLight,
   withLight,
+} = require("../src/core/lighting/model/settings");
+const {
   serializeLighting,
   parseLighting,
-} = require("../src/core/lighting/lamps");
-const { windowAt, windowKey } = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/file/lighting-file");
+const { windowAt, windowKey } = require("../src/core/lighting/model/windows");
 const { LightingCommand } = require("../src/core/command/lighting-command");
 const { MapState } = require("../src/core/state/map-state");
 

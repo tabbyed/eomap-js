@@ -5,7 +5,7 @@ const {
   createBulbMask,
   createHaloPixels,
   emissionAppearance,
-} = require("../src/core/lighting/lamp-emission");
+} = require("../src/core/lighting/appearance/lamp-emission");
 
 function sprite(width = 30, height = 140) {
   return { width, height, data: new Uint8ClampedArray(width * height * 4) };

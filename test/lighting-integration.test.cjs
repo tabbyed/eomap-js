@@ -5,13 +5,17 @@ const { test } = require("node:test");
 const babel = require("@babel/core");
 require("../scripts/register-core.cjs");
 
-const model = require("../src/core/lighting/lamps");
-const { LightField } = require("../src/core/lighting/light-field");
+const model = {
+  ...require("../src/core/lighting/model/lamps"),
+  ...require("../src/core/lighting/model/settings"),
+  ...require("../src/core/lighting/file/lighting-file"),
+};
+const { LightField } = require("../src/core/lighting/field/light-field");
 const { LightingCommand } = require("../src/core/command/lighting-command");
 const {
   saveMapWithLighting,
   saveLighting,
-} = require("../src/core/lighting/save");
+} = require("../src/core/lighting/file/save");
 const { MapState } = require("../src/core/state/map-state");
 const {
   LightingController,

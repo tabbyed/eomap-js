@@ -1,5 +1,5 @@
-import { EOBuilder } from "../data/eo-builder";
-import { serializeLighting } from "./lamps.js";
+import { EOBuilder } from "../../data/eo-builder";
+import { serializeLighting } from "./lighting-file.js";
 
 const pendingSaves = new WeakMap();
 

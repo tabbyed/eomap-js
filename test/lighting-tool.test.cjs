@@ -5,12 +5,10 @@ const { test } = require("node:test");
 require("../scripts/register-core.cjs");
 const { EMF } = require("../src/core/data/emf");
 const { MapState } = require("../src/core/state/map-state");
-const { LightField } = require("../src/core/lighting/light-field");
-const {
-  defaultLighting,
-  lightSettings,
-} = require("../src/core/lighting/lamps");
-const { LampTool } = require("../src/core/tools/lamp-tool");
+const { LightField } = require("../src/core/lighting/field/light-field");
+const { defaultLighting } = require("../src/core/lighting/model/settings");
+const { lightSettings } = require("../src/core/lighting/model/lamps");
+const { LightingTool } = require("../src/core/tools/lighting-tool");
 
 const origin = { x: 5, y: 5 };
 const destination = { x: 14, y: 6 };
@@ -126,7 +124,7 @@ function fixture(kind) {
     textureCache: { getResource: () => entry },
     gfxLoader: { resourceInfo: () => true },
   };
-  return { scene, tool: new LampTool(scene), field, mapState };
+  return { scene, tool: new LightingTool(scene), field, mapState };
 }
 
 function assertFieldAt(field, kind, position) {

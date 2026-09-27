@@ -1,8 +1,8 @@
-import { lampAt, freeLightAt } from "./lamps.js";
+import { lampAt, freeLightAt } from "../model/lamps.js";
 import { SOLID_WALL_GRAPHICS, WallGrid } from "./walls.js";
-import { LIGHT_HEIGHT_UNIT, lightSource } from "./light-geometry.js";
-import { windowAt } from "./windows.js";
-import { tileInMap } from "./validation.js";
+import { LIGHT_HEIGHT_UNIT, lightSource } from "../model/light-geometry.js";
+import { windowAt } from "../model/windows.js";
+import { tileInMap } from "../model/validation.js";
 
 export const HEIGHT_STEP = LIGHT_HEIGHT_UNIT;
 export const HEIGHT_LEVELS = 19; // 0..576 px: max source height + max light reach.

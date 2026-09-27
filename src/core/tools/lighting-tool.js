@@ -5,20 +5,22 @@ import {
   lampAt,
   lampKey,
   freeLightAt,
-  selectedLight,
-  withLight,
   lightSettings,
-} from "../lighting/lamps.js";
+} from "../lighting/model/lamps.js";
+import { selectedLight, withLight } from "../lighting/model/settings.js";
 import { LightingCommand } from "../command/lighting-command";
-import { lightGroundRadius, projectLight } from "../lighting/light-geometry.js";
-import { emissionAppearance } from "../lighting/lamp-emission.js";
-import { windowGlassSprites } from "../lighting/windows.js";
+import {
+  lightGroundRadius,
+  projectLight,
+} from "../lighting/model/light-geometry.js";
+import { emissionAppearance } from "../lighting/appearance/lamp-emission.js";
+import { windowGlassSprites } from "../lighting/model/windows.js";
 
 const LAMP_GUIDE = 0xf6c777;
 const WINDOW_GUIDE = 0x98ddff;
 const INVALID_GUIDE = 0xff8585;
 
-export class LampTool extends Tool {
+export class LightingTool extends Tool {
   constructor(scene) {
     super();
     this.scene = scene;
@@ -232,9 +234,9 @@ export class LampTool extends Tool {
     const map = this.scene.map;
     for (const graphic of map.renderList) {
       if (graphic.layer === 1) {
-        const lamp = lampAt(map.emf, settings, graphic.tileX, graphic.tileY);
-        if (lamp)
-          this.drawSourceGuide(lamp, LAMP_GUIDE, lamp.enabled ? 0.6 : 0.3);
+        const light = lampAt(map.emf, settings, graphic.tileX, graphic.tileY);
+        if (light)
+          this.drawSourceGuide(light, LAMP_GUIDE, light.enabled ? 0.6 : 0.3);
         continue;
       }
       for (const { spec } of map.lighting.windowGlass(graphic)) {
@@ -245,12 +247,12 @@ export class LampTool extends Tool {
   }
 
   // Ground reach ring, a stem to the source and brackets around the bulb.
-  drawSourceGuide(lamp, color, alpha) {
+  drawSourceGuide(light, color, alpha) {
     const map = this.scene.map;
-    const projected = projectLight(lamp);
+    const projected = projectLight(light);
     const point = this.worldToScreen(projected.x, projected.groundY);
     const source = this.worldToScreen(projected.x, projected.sourceY);
-    const groundRadius = lightGroundRadius(lamp);
+    const groundRadius = lightGroundRadius(light);
     this.guide.lineStyle(1.5, color, 0.75 * alpha);
     if (groundRadius > 0) {
       // Ground cross-section of the light's reach, before wall occlusion.
@@ -373,23 +375,23 @@ export class LampTool extends Tool {
       this.drawFreeLightMarkers(settings);
     }
 
-    let lamp = selectedLight(scene.emf, settings, state.selection);
-    if (lamp?.kind === "window" && state.mode === "select") {
-      if (state.guides) this.drawWindowGuide(lamp);
+    let light = selectedLight(scene.emf, settings, state.selection);
+    if (light?.kind === "window" && state.mode === "select") {
+      if (state.guides) this.drawWindowGuide(light);
       return true;
     }
-    const movedLight = state.mode === "move" ? lamp : null;
+    const movedLight = state.mode === "move" ? light : null;
     const placing = state.mode !== "select";
     let valid = false;
     if (placing && scene.currentPos.valid) {
       const preset =
         state.mode === "move"
-          ? lamp
+          ? light
           : state.preset === "free"
             ? FREE_LIGHT_PRESET
             : LAMP_PRESETS.find((item) => item.id === state.preset);
       if (preset) {
-        lamp = {
+        light = {
           enabled: true,
           ...preset,
           ...state.duplicate,
@@ -397,13 +399,13 @@ export class LampTool extends Tool {
           y: scene.currentPos.y,
         };
         valid =
-          lamp.kind === "free"
-            ? !freeLightAt(scene.emf, settings, lamp.x, lamp.y)
-            : !scene.emf.getTile(lamp.x, lamp.y).gfx[1];
+          light.kind === "free"
+            ? !freeLightAt(scene.emf, settings, light.x, light.y)
+            : !scene.emf.getTile(light.x, light.y).gfx[1];
         const entry =
-          lamp.kind === "free"
+          light.kind === "free"
             ? null
-            : scene.textureCache.getResource(4, lamp.graphic + 100);
+            : scene.textureCache.getResource(4, light.graphic + 100);
         if (entry !== this.cacheEntry) {
           this.cacheEntry?.decRef();
           this.cacheEntry = entry;
@@ -412,8 +414,8 @@ export class LampTool extends Tool {
         if (entry && !entry.loadingComplete) {
           const frame = entry.asset.getFrame(0);
           const pos = this.worldToScreen(
-            lamp.x * 32 - lamp.y * 32 + 30 + (frame.width % 2) / 2,
-            lamp.x * 16 + lamp.y * 16 + 30,
+            light.x * 32 - light.y * 32 + 30 + (frame.width % 2) / 2,
+            light.x * 16 + light.y * 16 + 30,
           );
           this.ghost
             .setTexture(frame.texture.key, frame.name)
@@ -423,13 +425,13 @@ export class LampTool extends Tool {
             .setAlpha(valid ? 0.7 : 0.4)
             .setTint(valid ? 0xffffff : 0xff7070)
             .setVisible(true);
-          const appearance = emissionAppearance(lamp);
+          const appearance = emissionAppearance(light);
           const emission =
             valid && state.preview && appearance.enabled
-              ? map.lighting.textures?.get(lamp.graphic)
+              ? map.lighting.textures?.get(light.graphic)
               : null;
           if (emission) {
-            const projected = projectLight(lamp);
+            const projected = projectLight(light);
             const source = this.worldToScreen(projected.x, projected.sourceY);
             this.ghostHalo
               .setTexture(emission.halo.texture.key, emission.halo.name)
@@ -451,19 +453,19 @@ export class LampTool extends Tool {
           }
         }
         if (valid && state.preview) {
-          this.previewLight = lamp;
+          this.previewLight = light;
           this.previewField = map.lighting.field;
           map.lighting.displacedLampKey =
             movedLight?.kind === "lamp" ? movedLight.key : null;
           // A move previews the same source at its destination, not two lamps.
-          map.lighting.field.setPreview({ light: lamp, replaces: movedLight });
+          map.lighting.field.setPreview({ light: light, replaces: movedLight });
           map.invalidateCachedFrame();
         }
       }
     }
-    if (!lamp || (!state.guides && !placing)) return true;
+    if (!light || (!state.guides && !placing)) return true;
     this.drawSourceGuide(
-      lamp,
+      light,
       placing && !valid ? INVALID_GUIDE : LAMP_GUIDE,
       1,
     );

@@ -4,7 +4,7 @@ require("../scripts/register-core.cjs");
 const {
   windowAppearance,
   maskOutline,
-} = require("../src/core/lighting/window-emission");
+} = require("../src/core/lighting/appearance/window-emission");
 const {
   createPixelHitMask,
   pixelHit,

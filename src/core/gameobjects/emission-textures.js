@@ -1,13 +1,19 @@
-import { createBulbMask, createHaloPixels } from "./lamp-emission.js";
-import { createWindowMask, WINDOW_DEFINITIONS } from "./windows.js";
-import { maskOutline } from "./window-emission.js";
+import {
+  createBulbMask,
+  createHaloPixels,
+} from "../lighting/appearance/lamp-emission.js";
+import {
+  createWindowMask,
+  WINDOW_DEFINITIONS,
+} from "../lighting/model/windows.js";
+import { maskOutline } from "../lighting/appearance/window-emission.js";
 import { createPixelHitMask } from "../gfx/pixel-hit-mask.js";
 
 let nextCacheId = 0;
 
 // Three small native masks and one halo per open map, shared by every lamp.
 // Decode/upload once; colour and strength are vertex tint/alpha changes.
-export class LampTextures {
+export class EmissionTextures {
   constructor(scene, loader, invalidate) {
     this.manager = scene.textures;
     this.loader = loader;

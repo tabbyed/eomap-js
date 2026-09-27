@@ -2,14 +2,16 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 require("../scripts/register-core.cjs");
 global.Phaser = { Textures: { LINEAR: 1, NEAREST: 0 } };
-const { LampTextures } = require("../src/core/lighting/lamp-textures");
+const {
+  EmissionTextures,
+} = require("../src/core/gameobjects/emission-textures");
 
 function fixture() {
   const loads = [],
     textures = [],
     removed = [];
   let invalidations = 0;
-  const cache = new LampTextures(
+  const cache = new EmissionTextures(
     { textures: { remove: (key) => removed.push(key) } },
     {
       resourceInfo: () => ({}),

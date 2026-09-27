@@ -12,10 +12,10 @@ const {
   windowGlassSprites,
   createWindowMask,
   windowSettings,
-} = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/model/windows");
 const { EMF } = require("../src/core/data/emf");
-const { defaultLighting } = require("../src/core/lighting/lamps");
-const { LightField } = require("../src/core/lighting/light-field");
+const { defaultLighting } = require("../src/core/lighting/model/settings");
+const { LightField } = require("../src/core/lighting/field/light-field");
 const audited = require("../docs/window-assets.json");
 
 function fixture(definition) {

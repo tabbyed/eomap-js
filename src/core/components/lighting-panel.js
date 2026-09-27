@@ -1,12 +1,11 @@
 import { css, html, LitElement, svg } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { AMBIENT_PRESETS, selectedLight } from "../lighting/model/settings.js";
 import {
-  AMBIENT_PRESETS,
   LAMP_PRESETS,
   FREE_LIGHT_PRESET,
-  selectedLight,
   CHICAGO_AMBER,
-} from "../lighting/lamps.js";
+} from "../lighting/model/lamps.js";
 import scrollbarStyles from "../styles/scrollbar";
 
 // A light with no graphic: a small sun, drawn in the text colour.

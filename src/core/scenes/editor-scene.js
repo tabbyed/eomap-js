@@ -10,7 +10,7 @@ import { MoveTool } from "../tools/move-tool";
 import { ZoomTool } from "../tools/zoom-tool";
 import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
-import { LampTool } from "../tools/lamp-tool";
+import { LightingTool } from "../tools/lighting-tool";
 
 import "../gameobjects/eomap";
 import "../gameobjects/cursor";
@@ -169,7 +169,7 @@ export class EditorScene extends Phaser.Scene {
       ["zoom", new ZoomTool()],
       ["fill", new FillTool()],
       ["entity", new EntityTool()],
-      ["lighting", new LampTool(this)],
+      ["lighting", new LightingTool(this)],
     ]);
   }
 

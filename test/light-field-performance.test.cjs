@@ -6,18 +6,20 @@ const {
   LightField,
   HEIGHT_LEVELS,
   HEIGHT_STEP,
-} = require("../src/core/lighting/light-field");
-const { WallGrid } = require("../src/core/lighting/walls");
-const { lightSource } = require("../src/core/lighting/light-geometry");
+} = require("../src/core/lighting/field/light-field");
+const { WallGrid } = require("../src/core/lighting/field/walls");
+const { lightSource } = require("../src/core/lighting/model/light-geometry");
 const {
   defaultLighting,
+  withLight,
+} = require("../src/core/lighting/model/settings");
+const {
   FREE_LIGHT_PRESET,
   lampAt,
   freeLightAt,
   lightSettings,
-  withLight,
-} = require("../src/core/lighting/lamps");
-const { windowAt } = require("../src/core/lighting/windows");
+} = require("../src/core/lighting/model/lamps");
+const { windowAt } = require("../src/core/lighting/model/windows");
 
 // Deliberately exhaustive reference: visit every sample and height band rather
 // than using the production source bounds or cached height terms.

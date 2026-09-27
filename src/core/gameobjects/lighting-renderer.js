@@ -1,16 +1,16 @@
-import { LightField } from "../lighting/light-field.js";
-import { lampAt, lampPreset } from "../lighting/lamps.js";
-import { projectLight } from "../lighting/light-geometry.js";
-import { emissionAppearance } from "../lighting/lamp-emission.js";
-import { LampTextures } from "../lighting/lamp-textures.js";
-import { windowGlassAt } from "../lighting/windows.js";
-import { windowAppearance } from "../lighting/window-emission.js";
+import { LightField } from "../lighting/field/light-field.js";
+import { lampAt, lampPreset } from "../lighting/model/lamps.js";
+import { projectLight } from "../lighting/model/light-geometry.js";
+import { emissionAppearance } from "../lighting/appearance/lamp-emission.js";
+import { EmissionTextures } from "./emission-textures.js";
+import { windowGlassAt } from "../lighting/model/windows.js";
+import { windowAppearance } from "../lighting/appearance/window-emission.js";
 import { pixelHit } from "../gfx/pixel-hit-mask.js";
-import { SOLID_WALL_GRAPHICS } from "../lighting/walls.js";
+import { SOLID_WALL_GRAPHICS } from "../lighting/field/walls.js";
 import {
   wallSurfaceVertex,
   wallSurfaceSlices,
-} from "../lighting/wall-surface.js";
+} from "../lighting/model/wall-surface.js";
 
 const NO_GLASS = Object.freeze([]);
 
@@ -26,7 +26,7 @@ const HALO_PADDING = 32;
 export class LightingRenderer {
   constructor(map, scene, gfxLoader) {
     this.map = map;
-    this.textures = new LampTextures(scene, gfxLoader, () =>
+    this.textures = new EmissionTextures(scene, gfxLoader, () =>
       map.invalidateCachedFrame(),
     );
     this.field = null;
