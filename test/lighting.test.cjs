@@ -485,6 +485,8 @@ test("native sources project onto measured bulb centres and retain integer owner
     { graphic: 738, width: 60, height: 123, bulbX: 27, bulbY: 0 },
     { graphic: 748, width: 34, height: 40, bulbX: 15, bulbY: -2 },
     { graphic: 546, width: 42, height: 90, bulbX: 20, bulbY: 20 },
+    // The fireplace: its fire at log height, just in front of the hearth.
+    { graphic: 77, width: 32, height: 67, bulbX: 26, bulbY: 48 },
   ];
   const emf = EMF.new(16, 16, "Bulb calibration");
   for (const art of artwork) {

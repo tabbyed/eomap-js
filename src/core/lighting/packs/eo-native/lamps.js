@@ -152,6 +152,20 @@ export const lamps = [
     anchor: { x: -3, y: 4 },
     description: "Cold blue fire in a silver bowl",
   },
+  {
+    id: "fireplace",
+    name: "Fireplace",
+    graphic: 77,
+    // The hearth's right-hand half is its own sprite on the next tile.
+    parts: [{ graphic: 78, dx: 1, dy: 0 }],
+    radius: 5,
+    color: "#ff9a3c",
+    brightness: 1.5,
+    glow: 1,
+    height: 12,
+    anchor: { x: 8, y: 7 },
+    description: "A log fire in a stone hearth",
+  },
 ];
 
 // Each lamp's glass or flame in unscaled sprite pixels, inclusive. Frames,
@@ -193,4 +207,6 @@ export const bulbGlass = new Map([
   [748, { left: 13, top: 0, right: 17, bottom: 8 }],
   // White flame cores only; the silver bowl and stand are excluded.
   [546, { left: 1, top: 0, right: 40, bottom: 32 }],
+  // The hearth has no fire drawn; its glow comes from its moving flames.
+  [77, { left: 14, top: 25, right: 31, bottom: 58 }],
 ]);

@@ -6,6 +6,7 @@ import {
   FLAMES,
   flameFlicker,
   flameFrame,
+  flameOwner,
   flameStep,
 } from "../lighting/appearance/flame-animation.js";
 import { EmissionTextures } from "./emission-textures.js";
@@ -126,12 +127,14 @@ export class LightingRenderer {
   // Emission, flame and glass for one graphic, or null when it has none.
   // A moving flame also names the still `frame` to draw in place of the art.
   prepare(renderTexture, graphic) {
-    const lamp =
+    const object =
       this.enabled &&
       renderTexture.renderTarget &&
-      graphic.layer === Layer.Objects
-        ? lampAt(this.emf, this.settings, graphic.tileX, graphic.tileY)
-        : null;
+      graphic.layer === Layer.Objects;
+    const lamp = object
+      ? lampAt(this.emf, this.settings, graphic.tileX, graphic.tileY)
+      : null;
+    if (object && !lamp) return this.preparePart(graphic);
     const appearance = lamp && emissionAppearance(lamp);
     const shown =
       lamp &&
@@ -157,6 +160,38 @@ export class LightingRenderer {
       emission,
       glass,
       frame: flame.base,
+      flame: flame.frames[flameFrame(lamp.key, step, flame.frames.length)],
+      flicker: flameFlicker(lamp.key, step),
+    };
+  }
+
+  // A partner sprite of a lamp drawn across tiles, such as a fireplace's
+  // right-hand half, draws its share of its owner's flame in step with it.
+  // The owner alone draws the halo.
+  preparePart(graphic) {
+    const graphicId = graphic.cacheEntry.resourceID - 100;
+    const owner = flameOwner(graphicId);
+    if (!owner || graphic.cacheEntry.loadingComplete) return null;
+    const lamp = lampAt(
+      this.emf,
+      this.settings,
+      graphic.tileX + owner.dx,
+      graphic.tileY + owner.dy,
+    );
+    if (
+      lamp?.graphic !== owner.graphic ||
+      lamp.enabled === false ||
+      lamp.key === this.displacedLampKey
+    )
+      return null;
+    const flame = this.textures.getFlame(graphicId);
+    if (!flame) return null;
+    const step = this.flameStep;
+    return {
+      lamp,
+      appearance: emissionAppearance(lamp),
+      emission: null,
+      glass: NO_GLASS,
       flame: flame.frames[flameFrame(lamp.key, step, flame.frames.length)],
       flicker: flameFlicker(lamp.key, step),
     };
@@ -199,10 +234,15 @@ export class LightingRenderer {
         null,
         0xffffff,
       );
-    if (emission)
+    // A moving flame glows through its own frame's core; a still lamp
+    // through its glass.
+    const core = flame
+      ? appearance.enabled && flame.core
+      : emission && emission.mask;
+    if (core)
       this.map.batchDrawFrame(
         renderTexture,
-        flame ? flame.core : emission.mask,
+        core,
         flame ? x + flame.x : x,
         flame ? y + flame.y : y,
         Math.min(1, appearance.coreAlpha * flicker) * graphic.alpha,

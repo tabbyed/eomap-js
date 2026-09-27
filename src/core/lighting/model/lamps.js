@@ -73,6 +73,37 @@ export function lampAt(emf, lighting, x, y) {
   };
 }
 
+// A lamp drawn across several tiles, such as a fireplace, lists its other
+// sprites as `parts` at offsets from its own tile. Only the owner is a lamp:
+// lampAt never answers for a part, so a light is never counted twice.
+const PART_OWNERS = new Map(
+  LAMP_PRESETS.flatMap((preset) =>
+    (preset.parts ?? []).map((part) => [part.graphic, { preset, ...part }]),
+  ),
+);
+
+/** The lamp at a tile, or the lamp whose part is drawn there. */
+export function lampOwning(emf, lighting, x, y) {
+  const lamp = lampAt(emf, lighting, x, y);
+  if (lamp || !tileInMap(emf, x, y)) return lamp;
+  const part = PART_OWNERS.get(emf.getTile(x, y).gfx[Layer.Objects]);
+  if (!part) return null;
+  const owner = lampAt(emf, lighting, x - part.dx, y - part.dy);
+  return owner?.graphic === part.preset.graphic ? owner : null;
+}
+
+/** Every object graphic a lamp at (x, y) places: its own, then its parts'. */
+export function lampTiles(preset, x, y, graphic = preset.graphic) {
+  return [
+    { x, y, graphic },
+    ...(preset.parts ?? []).map((part) => ({
+      x: x + part.dx,
+      y: y + part.dy,
+      graphic: part.graphic,
+    })),
+  ];
+}
+
 export function freeLightAt(emf, lighting, x, y) {
   if (!tileInMap(emf, x, y)) return null;
   const key = `${x},${y}`;

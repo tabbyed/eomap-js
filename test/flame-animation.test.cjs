@@ -49,8 +49,17 @@ const colour = (pixels, x, y) => {
 
 test("every moving flame belongs to a lamp and uses only its palette", () => {
   for (const [graphic, spec] of FLAMES) {
-    assert.ok(lampPreset(graphic), `Graphic ${graphic} is not a lamp`);
-    if (spec.empty) continue;
+    // A partner sprite's flame belongs to the lamp that lists it as a part.
+    const lamp = spec.owner
+      ? lampPreset(spec.owner.graphic)?.parts?.find(
+          (part) =>
+            part.graphic === graphic &&
+            part.dx === -spec.owner.dx &&
+            part.dy === -spec.owner.dy,
+        )
+      : lampPreset(graphic);
+    assert.ok(lamp, `Graphic ${graphic} belongs to no lamp`);
+    if (spec.empty || spec.fire) continue;
     assert.ok(spec.frames.length >= 2);
     const width = spec.frames[0][0].length,
       height = spec.frames[0].length;
@@ -169,6 +178,69 @@ test("the bent brazier fire moves but never covers bowl it left showing", () => 
       }
   }
   assert.ok(moved, "No frame lifted the fire above the sprite");
+});
+
+test("a fireplace borrows fire that shows only through its dark firebox", () => {
+  // A 32 x 67 hearth: light stone everywhere, a dark firebox inside the
+  // window, and light logs across its foot.
+  const hearth = sprite(32, 67, [150, 150, 150, 255]);
+  const [left, top, right, bottom] = FLAMES.get(77).window;
+  for (let y = top; y <= bottom; y++)
+    for (let x = left; x <= right; x++)
+      hearth.data.set(
+        y > 50 ? [140, 90, 40, 255] : [40, 40, 40, 255],
+        (y * 32 + x) * 4,
+      );
+  // Four 61-px campfire frames: bright flame everywhere except a dark log.
+  const campfire = sprite(244, 57, [255, 160, 40, 255]);
+  for (let x = 0; x < 244; x++)
+    campfire.data.set([60, 30, 10, 255], (5 * 244 + x) * 4);
+  const { base, frames } = createFlameAnimation(hearth, 77, campfire);
+  assert.equal(base, null, "the hearth has no native flame to hide");
+  assert.equal(frames.length, 4);
+  const spec = FLAMES.get(77);
+  for (const frame of frames) {
+    assert.deepEqual([frame.x, frame.y], [left, top]);
+    let fire = 0;
+    for (let y = 0; y < frame.flame.height; y++)
+      for (let x = 0; x < frame.flame.width; x++) {
+        if (!alpha(frame.flame, x, y)) continue;
+        fire++;
+        const sy = top + y - spec.y;
+        // Only firebox pixels within the borrowed rows, never stone or logs,
+        // and never the campfire's own log colour.
+        assert.ok(top + y <= 50, "fire covered the logs");
+        assert.ok(sy >= 0 && sy < spec.fire.rows && sy !== 5);
+        assert.deepEqual(colour(frame.flame, x, y), [255, 160, 40]);
+        assert.equal(alpha(frame.core, x, y), 0, "amber fire is not white-hot");
+      }
+    assert.ok(fire > 0);
+  }
+});
+
+test("a fireplace's two halves resolve to one lamp and place together", () => {
+  const {
+    lampAt,
+    lampOwning,
+    lampTiles,
+  } = require("../src/core/lighting/model/lamps");
+  const emf = EMF.new(10, 10, "Hearth");
+  emf.getTile(4, 3).gfx[1] = 77;
+  emf.getTile(5, 3).gfx[1] = 78;
+  const lighting = defaultLighting();
+  assert.equal(
+    lampAt(emf, lighting, 5, 3),
+    null,
+    "a part is never its own light",
+  );
+  assert.equal(lampOwning(emf, lighting, 5, 3).key, "4,3,77");
+  assert.equal(lampOwning(emf, lighting, 4, 3).key, "4,3,77");
+  emf.getTile(4, 3).gfx[1] = 0;
+  assert.equal(lampOwning(emf, lighting, 5, 3), null, "orphaned half");
+  assert.deepEqual(lampTiles(lampPreset(77), 7, 2), [
+    { x: 7, y: 2, graphic: 77 },
+    { x: 8, y: 2, graphic: 78 },
+  ]);
 });
 
 test("the flicker clock steps unevenly and flames never hold a shape for two steps", () => {
@@ -337,4 +409,30 @@ test("a lit candle draws its flameless base with the current frame; switched off
   const off = map.lighting.prepare(target, graphic);
   assert.equal(off?.frame, undefined);
   assert.equal(off?.flame, undefined);
+});
+
+test("a fireplace's right-hand half draws its share of the fire in step with its owner", () => {
+  const map = makeMap();
+  map.lighting.enabled = true;
+  const owner = candle(map, 77);
+  map.emf.getTile(5, 5).gfx[1] = 78;
+  const part = {
+    layer: 1,
+    tileX: 5,
+    tileY: 5,
+    alpha: 1,
+    cacheEntry: { resourceID: 178, loadingComplete: null, asset: {} },
+  };
+  const target = { renderTarget: {} };
+  for (let step = 0; step < 20; step++) {
+    map.lighting.flameStep = step;
+    const own = map.lighting.prepare(target, owner);
+    const share = map.lighting.prepare(target, part);
+    assert.equal(share.lamp.key, own.lamp.key);
+    assert.equal(share.flame, own.flame, "the halves showed different frames");
+    assert.equal(share.flicker, own.flicker);
+    assert.equal(share.emission, null, "only the owner draws the halo");
+  }
+  map.emf.getTile(4, 5).gfx[1] = 0;
+  assert.equal(map.lighting.prepare(target, part), null, "orphaned half");
 });

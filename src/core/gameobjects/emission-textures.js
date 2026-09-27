@@ -124,14 +124,21 @@ export class EmissionTextures {
     const spec = FLAMES.get(graphic);
     if (this.destroyed || !spec) return null;
     if (!this.flames.has(graphic)) {
-      const ids = spec.empty ? [graphic, spec.empty] : [graphic];
-      if (!ids.every((id) => this.loader.resourceInfo(4, id + 100)))
+      // The sprite, then any empty sprite or borrowed fire it needs: [file, id].
+      const sources = [[4, graphic]];
+      if (spec.empty) sources.push([4, spec.empty]);
+      if (spec.fire) sources.push([spec.fire.file, spec.fire.graphic]);
+      if (
+        !sources.every(([file, id]) => this.loader.resourceInfo(file, id + 100))
+      )
         return null;
       this.flames.set(graphic, null);
-      Promise.all(ids.map((id) => this.loader.loadResource(4, id + 100)))
-        .then(([pixels, empty]) => {
+      Promise.all(
+        sources.map(([file, id]) => this.loader.loadResource(file, id + 100)),
+      )
+        .then(([pixels, extra]) => {
           if (this.destroyed) return;
-          const animation = createFlameAnimation(pixels, graphic, empty);
+          const animation = createFlameAnimation(pixels, graphic, extra);
           const upload = (name, framePixels) =>
             this.createTexture(
               `flame-${graphic}-${name}`,
@@ -139,7 +146,7 @@ export class EmissionTextures {
               Phaser.Textures.NEAREST,
             );
           this.flames.set(graphic, {
-            base: upload("base", animation.base),
+            base: animation.base && upload("base", animation.base),
             frames: animation.frames.map((frame, i) => ({
               x: frame.x,
               y: frame.y,

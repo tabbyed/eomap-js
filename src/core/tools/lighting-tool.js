@@ -2,10 +2,13 @@ import { Tool } from "./tool";
 import {
   lampAt,
   lampKey,
+  lampOwning,
+  lampTiles,
   freeLightAt,
   lightSettings,
   presetById,
 } from "../lighting/model/lamps.js";
+import { tileInMap } from "../lighting/model/validation.js";
 import { selectedLight, withLight } from "../lighting/model/settings.js";
 import { LightingCommand } from "../command/lighting-command";
 import {
@@ -46,11 +49,61 @@ export class LightingTool extends Tool {
       .image(0, 0, "__DEFAULT")
       .setDepth(2.1)
       .setVisible(false);
+    // Ghosts and texture references for a lamp's other sprites (its parts).
+    this.partGhosts = [];
+    this.partEntries = [];
     this.previewLight = null;
     this.cacheEntry = null;
     this.viewSignature = null;
     this.cursorSignature = null;
     scene.events.once("shutdown", () => this.dispose());
+  }
+
+  // Translucent ghosts of a lamp's other sprites, such as a fireplace's
+  // right-hand half, beside the main ghost.
+  drawPartGhosts(light, valid) {
+    const scene = this.scene;
+    const parts = lampTiles(light, light.x, light.y).slice(1);
+    parts.forEach((part, i) => {
+      const entry = scene.textureCache.getResource(4, part.graphic + 100);
+      if (entry !== this.partEntries[i]) {
+        this.partEntries[i]?.decRef();
+        this.partEntries[i] = entry;
+        entry?.incRef();
+      }
+      if (!entry || entry.loadingComplete) return;
+      this.partGhosts[i] ??= scene.add
+        .image(0, 0, "__DEFAULT")
+        .setDepth(2)
+        .setVisible(false);
+      const frame = entry.asset.getFrame(0);
+      const pos = this.worldToScreen(
+        part.x * 32 - part.y * 32 + 30 + (frame.width % 2) / 2,
+        part.x * 16 + part.y * 16 + 30,
+      );
+      this.partGhosts[i]
+        .setTexture(frame.texture.key, frame.name)
+        .setOrigin(0.5, 1)
+        .setPosition(pos.x, pos.y)
+        .setScale(scene.map.zoom)
+        .setAlpha(valid ? 0.7 : 0.4)
+        .setTint(valid ? 0xffffff : 0xff7070)
+        .setVisible(true);
+    });
+  }
+
+  // Whether a lamp and all its parts fit at (x, y): every tile in the map
+  // and free of objects, except tiles that the lamp being moved will vacate.
+  lampFits(emf, lamp, x, y, moving = null) {
+    const vacated = moving
+      ? lampTiles(moving, moving.x, moving.y, moving.graphic)
+      : [];
+    return lampTiles(lamp, x, y).every(
+      (tile) =>
+        tileInMap(emf, tile.x, tile.y) &&
+        (!emf.getTile(tile.x, tile.y).gfx[Layer.Objects] ||
+          vacated.some((v) => v.x === tile.x && v.y === tile.y)),
+    );
   }
 
   get state() {
@@ -99,16 +152,19 @@ export class LightingTool extends Tool {
     const state = this.state;
     const { x, y } = scene.currentPos;
     const current = scene.mapState.lighting;
+    // Either half of a lamp drawn across tiles selects the lamp itself.
     const existing =
       (state.preset === "free"
         ? freeLightAt(scene.emf, current, x, y)
-        : lampAt(scene.emf, current, x, y)) ||
+        : lampOwning(scene.emf, current, x, y)) ||
       freeLightAt(scene.emf, current, x, y) ||
-      lampAt(scene.emf, current, x, y);
+      lampOwning(scene.emf, current, x, y);
     this.clearPreview();
     if (state.mode === "select") {
       this.notify({
-        selection: existing ? { x, y, kind: existing.kind } : null,
+        selection: existing
+          ? { x: existing.x, y: existing.y, kind: existing.kind }
+          : null,
         notice: existing
           ? ""
           : "Select a lamp base, a window’s glass or a free-light marker.",
@@ -150,13 +206,20 @@ export class LightingTool extends Tool {
       });
       return;
     }
-    if (scene.emf.getTile(x, y).gfx[Layer.Objects]) {
+    if (preset && !this.lampFits(scene.emf, preset, x, y, origin)) {
       this.notify({
-        notice: "This tile already has an object. Choose an empty tile.",
+        notice: preset.parts?.length
+          ? "This lamp covers more than one tile. Choose a spot where they are all empty."
+          : "This tile already has an object. Choose an empty tile.",
       });
       return;
     }
-    if (!preset || !scene.gfxLoader.resourceInfo(4, preset.graphic + 100)) {
+    if (
+      !preset ||
+      !lampTiles(preset, x, y).every(({ graphic }) =>
+        scene.gfxLoader.resourceInfo(4, graphic + 100),
+      )
+    ) {
       this.notify({
         mode: "select",
         notice: "This lamp is not available in the loaded graphics.",
@@ -170,10 +233,16 @@ export class LightingTool extends Tool {
       ...current,
       lamps: { ...current.lamps, [lampKey(x, y, preset.graphic)]: settings },
     };
-    const tiles = [{ x, y, graphic: preset.graphic }];
+    // Vacate the old tiles before filling the new ones; they may overlap.
+    const tiles = lampTiles(preset, x, y);
     if (origin) {
       delete lighting.lamps[origin.key];
-      tiles.unshift({ x: origin.x, y: origin.y, graphic: null });
+      tiles.unshift(
+        ...lampTiles(origin, origin.x, origin.y).map((tile) => ({
+          ...tile,
+          graphic: null,
+        })),
+      );
     }
     scene.commandInvoker.finalizeAggregate();
     scene.commandInvoker.add(
@@ -381,6 +450,7 @@ export class LightingTool extends Tool {
           scene.currentPos.y,
           scene.currentPos.valid,
           this.cacheEntry?.loadingComplete === null,
+          this.partEntries.every((entry) => entry?.loadingComplete === null),
         ]
       : [];
     const viewChanged = !sameParts(view, this.viewSignature);
@@ -417,6 +487,7 @@ export class LightingTool extends Tool {
     this.ghost.setVisible(false);
     this.ghostHalo.setVisible(false);
     this.ghostBulb.setVisible(false);
+    for (const ghost of this.partGhosts) ghost.setVisible(false);
     if (!placing) return;
     let light = selectedLight(scene.emf, settings, state.selection);
     const movedLight = state.mode === "move" ? light : null;
@@ -434,7 +505,7 @@ export class LightingTool extends Tool {
         valid =
           light.kind === LightKind.Free
             ? !freeLightAt(scene.emf, settings, light.x, light.y)
-            : !scene.emf.getTile(light.x, light.y).gfx[Layer.Objects];
+            : this.lampFits(scene.emf, light, light.x, light.y, movedLight);
         const entry =
           light.kind === LightKind.Free
             ? null
@@ -458,6 +529,7 @@ export class LightingTool extends Tool {
             .setAlpha(valid ? 0.7 : 0.4)
             .setTint(valid ? 0xffffff : 0xff7070)
             .setVisible(true);
+          this.drawPartGhosts(light, valid);
           const appearance = emissionAppearance(light);
           const emission =
             valid && state.preview && appearance.enabled
@@ -509,6 +581,8 @@ export class LightingTool extends Tool {
   dispose() {
     this.cacheEntry?.decRef();
     this.cacheEntry = null;
+    for (const entry of this.partEntries) entry?.decRef();
+    this.partEntries = [];
     this.previewLight = null;
   }
 }

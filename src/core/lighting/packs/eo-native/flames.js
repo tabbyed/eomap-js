@@ -35,6 +35,7 @@ const taperFlame = [
   [".....", ".....", ".....", "..C..", ".CDC.", ".BAB.", "..A.."],
 ];
 const taper = (x, y) => ({ frames: taperFlame, x, y });
+const campfire = { file: 6, graphic: 597, frames: 4, rows: 24 };
 export const flames = new Map([
   [587, { frames: standingFlame, x: 14, y: -5, clear: [14, 0, 21, 4] }],
   [
@@ -68,4 +69,20 @@ export const flames = new Map([
   // and tongues that stretch upward. The empty bowl (545) shows beneath, and
   // the fire never covers bowl pixels that it did not already cover.
   [546, { empty: 545, count: 6, sway: 1.6, lift: 2, base: 30, margin: 3 }],
+  // The fireplace borrows the campfire's flames (wall 597, four frames; its
+  // top 24 rows, without the logs) and shows them only through the dark
+  // firebox within `window`, so the hearth's own logs and stone stay in front.
+  // The hearth spans two sprites; the right-hand part draws its share on its
+  // own tile, in step with its owner, so draw order never cuts the fire.
+  [77, { fire: campfire, x: -3, y: 34, window: [14, 25, 31, 58] }],
+  [
+    78,
+    {
+      fire: campfire,
+      x: -35,
+      y: 25,
+      window: [0, 24, 6, 56],
+      owner: { graphic: 77, dx: -1, dy: 0 },
+    },
+  ],
 ]);

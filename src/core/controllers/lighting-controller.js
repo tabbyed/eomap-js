@@ -7,7 +7,7 @@ import {
   selectedLight,
   withLight,
 } from "../lighting/model/settings.js";
-import { lightSettings } from "../lighting/model/lamps.js";
+import { lampTiles, lightSettings } from "../lighting/model/lamps.js";
 import { readLightingFile } from "../lighting/file/lighting-file.js";
 import { LightKind } from "../lighting/model/light-kind.js";
 
@@ -112,7 +112,10 @@ export class LightingController {
             withLight(state.lighting, light, null),
             light.kind === LightKind.Free
               ? []
-              : [{ x: light.x, y: light.y, graphic: null }],
+              : lampTiles(light, light.x, light.y).map((tile) => ({
+                  ...tile,
+                  graphic: null,
+                })),
           );
           updateTool({
             selection: null,

@@ -58,16 +58,59 @@ const pixelsOf = (width, height) => ({
 
 /**
  * Build a moving flame from decoded RGBA sprite pixels: a still base (the
- * sprite without its native flame) and frames, each with its colours, a white
- * mask of the pixels that glow, and its offset from the sprite's top-left.
- * A bent flame also needs its `empty` sprite. Returns null for other graphics.
+ * sprite without its native flame; null when the sprite shows no flame to
+ * hide) and frames, each with its colours, a white mask of the pixels that
+ * glow, and its offset from the sprite's top-left. A bent flame also needs
+ * its `empty` sprite, and a borrowed one the `source` it borrows its fire
+ * from. Returns null for other graphics.
  */
-export function createFlameAnimation(pixels, graphic, empty = null) {
+export function createFlameAnimation(pixels, graphic, extra = null) {
   const spec = FLAMES.get(graphic);
   if (!spec) return null;
   if (!isRgbaPixels(pixels))
     throw new TypeError("A flame requires complete RGBA sprite pixels.");
-  return spec.empty ? bentFlame(spec, pixels, empty) : drawnFlame(spec, pixels);
+  if (spec.empty) return bentFlame(spec, pixels, extra);
+  if (spec.fire) return borrowedFlame(spec, pixels, extra);
+  return drawnFlame(spec, pixels);
+}
+
+// Hearth interiors are dark; stonework and logs are lighter and stay in front.
+const FIREBOX_LUMINANCE = 85;
+// Campfire flames are warm and bright; its logs and embers are not.
+const isFire = (r, g) => r > 150 && g > 60;
+
+function borrowedFlame(spec, { width, height, data }, source) {
+  if (!isRgbaPixels(source))
+    throw new TypeError("A borrowed flame requires its source's pixels.");
+  const { frames: count, rows } = spec.fire;
+  const frameWidth = Math.floor(source.width / count);
+  const [left, top, right, bottom] = spec.window;
+  const w = right - left + 1,
+    h = bottom - top + 1;
+  const frames = [];
+  for (let k = 0; k < count; k++) {
+    const flame = pixelsOf(w, h),
+      core = pixelsOf(w, h);
+    for (let y = top; y <= bottom; y++)
+      for (let x = left; x <= right; x++) {
+        if (x < 0 || y < 0 || x >= width || y >= height) continue;
+        const i = (y * width + x) * 4;
+        const luminance =
+          data[i] * 0.2126 + data[i + 1] * 0.7152 + data[i + 2] * 0.0722;
+        if (!data[i + 3] || luminance >= FIREBOX_LUMINANCE) continue;
+        const sx = x - spec.x,
+          sy = y - spec.y;
+        if (sx < 0 || sy < 0 || sx >= frameWidth || sy >= rows) continue;
+        const j = (sy * source.width + k * frameWidth + sx) * 4;
+        const [r, g, b] = source.data.subarray(j, j + 3);
+        if (!source.data[j + 3] || !isFire(r, g)) continue;
+        const o = ((y - top) * w + (x - left)) * 4;
+        flame.data.set(source.data.subarray(j, j + 4), o);
+        if (isGlowing(r, g, b)) core.data.set([255, 255, 255, 255], o);
+      }
+    frames.push({ x: left, y: top, flame, core });
+  }
+  return { base: null, frames };
 }
 
 function drawnFlame(spec, { width, height, data }) {
@@ -94,6 +137,11 @@ function drawnFlame(spec, { width, height, data }) {
     return { x: spec.x, y: spec.y, flame, core };
   });
   return { base, frames };
+}
+
+/** The lamp a partner sprite's flame belongs to: { graphic, dx, dy }. */
+export function flameOwner(graphic) {
+  return FLAMES.get(graphic)?.owner ?? null;
 }
 
 function bentFlame(spec, pixels, empty) {
