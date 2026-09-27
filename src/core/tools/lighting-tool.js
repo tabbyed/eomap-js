@@ -454,7 +454,8 @@ export class LightingTool extends Tool {
               .setVisible(true);
           }
         }
-        if (valid && state.preview) {
+        // The field exists only once lighting has been shown.
+        if (valid && state.preview && map.lighting.field) {
           this.previewLight = light;
           this.previewField = map.lighting.field;
           map.lighting.displacedLampKey =

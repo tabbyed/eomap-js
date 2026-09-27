@@ -55,17 +55,23 @@ export class LightingRenderer {
     if (this.committed) this.show(this.committed);
   }
 
+  // The field is built the first time lighting is shown, so a map that is
+  // never lit costs neither its memory nor its build. Once built it stays
+  // current through tile edits, and hiding lighting keeps it.
   show(settings) {
-    if (this.field && this.settings === settings) return;
+    if (this.settings === settings && (this.field || !this.enabled)) return;
     this.settings = settings;
     if (this.field) this.field.setSettings(settings);
-    else this.field = new LightField(this.emf, settings);
+    else if (this.enabled) this.field = new LightField(this.emf, settings);
+    else return;
     this.map.invalidateCachedFrame();
   }
 
   setEnabled(enabled) {
     if (this.enabled === enabled) return;
     this.enabled = enabled;
+    if (enabled && !this.field && this.settings)
+      this.field = new LightField(this.emf, this.settings);
     this.map.invalidateCachedFrame();
   }
 
@@ -77,7 +83,8 @@ export class LightingRenderer {
   }
 
   rebuild() {
-    if (this.settings) this.field = new LightField(this.emf, this.settings);
+    if (this.settings && this.enabled)
+      this.field = new LightField(this.emf, this.settings);
   }
 
   tileChanged(x, y, layer) {

@@ -81,9 +81,7 @@ export class EditorScene extends Phaser.Scene {
 
     this.mapState.gameObject = this.map;
     this.map.setLighting(this.mapState.lighting);
-    this.map.setLightingPreview(
-      this.data.get("lightingToolState")?.preview ?? true,
-    );
+    this.updateLightingPreview();
 
     this.tools = this.createTools();
     this.data.events.on(
@@ -93,8 +91,11 @@ export class EditorScene extends Phaser.Scene {
         // An inspector preview belongs to the light that was selected.
         if (state?.selection !== previous?.selection)
           this.map.clearLightingPreview();
-        this.map.setLightingPreview(state.preview);
+        this.updateLightingPreview();
       },
+    );
+    this.data.events.on("changedata-selectedTool", () =>
+      this.updateLightingPreview(),
     );
 
     let cursorKeys = this.input.keyboard.createCursorKeys();
@@ -600,6 +601,15 @@ export class EditorScene extends Phaser.Scene {
 
   getTileYFromWorldPos(worldPos) {
     return -Math.floor((worldPos.x + 32) / 64 - worldPos.y / 32);
+  }
+
+  // Lighting shows only while the Lighting tool is selected, so every other
+  // tool shows the map as the game draws it.
+  updateLightingPreview() {
+    this.map.setLightingPreview(
+      this.selectedTool === "lighting" &&
+        (this.data.get("lightingToolState")?.preview ?? true),
+    );
   }
 
   initCameraPosition() {
