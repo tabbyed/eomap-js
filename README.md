@@ -7,9 +7,17 @@
 
 An Endless Map File (EMF) editor written in JavaScript.
 
-## Lighting preview
+## Lighting
 
-**Lighting** sits beside **Special** in the layer palette (shortcut **L**). Native street lamps, tall lamps, lanterns, garden lanterns, festive lamps, candles, a blue brazier, 30 window styles and the church's wall lantern light up automatically while Lighting is selected, and the candles and brazier flicker; every other tool shows the map as the game draws it. You can add lamps or free lights, tune any light, and save the result to a companion `.lighting.json` file. The EMF itself never changes. Lighting is an editor preview for now; EOWeb integration is still to come.
+**Lighting** sits beside **Special** in the layer palette (shortcut **L**). While it's selected, native lamps and windows light up on their own: street, tall and festive lamps, lanterns and garden lanterns; shelf, bedside, desk, cabinet and shrine candles; a blue brazier; the fireplace; 30 window styles and the church's wall lantern. Candles, the brazier and the fireplace burn with moving flames. Every other tool shows the map as the game draws it.
+
+You can add lamps or free lights, tune any light, and save the result to a companion `.lighting.json` file beside the map. The EMF itself never changes, so servers and clients that know nothing about lighting keep working with it.
+
+![The fireplace room at night, its fire and a shelf candle flickering on the walls](docs/images/lighting/flames.gif)
+
+The same file lights the map in game. [EOWeb](https://github.com/tabbyed/eoweb) loads it beside each map and draws it with this editor's lighting core, so a room looks the same in both:
+
+![The same room in the editor's lighting preview and in EOWeb](docs/images/lighting/editor-and-eoweb.png)
 
 ### How to use it
 
@@ -35,8 +43,9 @@ An Endless Map File (EMF) editor written in JavaScript.
 - **Walls are lit as one surface.** Each wall sprite is shaded in horizontal strips that sample the field on the wall's outside face at their real height. A raised light lights the wall higher up, and neighbouring wall pieces meet without seams.
 - **Wall edits update live.** Adding, removing or replacing a wall re-traces only the lights whose reach touches it.
 - **Windows and lanterns are part of the wall art.** Their glass is picked out by exact colours inside a small box, so frames and bricks never glow. Each shines outward from its face only, and its wall still blocks light.
+- **Flames are animated from the game's own art.** Candles, the brazier and the fireplace swap their still flames for moving ones, all stepping on one flicker clock with uneven 120–190 ms steps so they never look mechanical. A fixture built from two graphics, like the fireplace, is one light drawn across both.
 
-Roof surfaces, finite-height blockers and custom graphics still need explicit geometry metadata. Preview shading requires WebGL. For how we got here, see [Some thoughts on lighting](docs/some-thoughts-on-lighting.md).
+Roof surfaces, finite-height blockers and custom graphics still need explicit geometry metadata. Preview shading requires WebGL. For where the code lives, see [Lighting](docs/LIGHTING.md); for how we got here, [Some thoughts on lighting](docs/some-thoughts-on-lighting.md).
 
 <details>
 <summary>More examples</summary>
@@ -58,6 +67,16 @@ One window switches off and on while its neighbour and a street lamp stay lit:
 ![Independent lighting for a window embedded in native wall artwork](docs/images/lighting/window-lighting.gif)
 
 </details>
+
+### In game clients
+
+The lighting core lives in [`src/core/lighting`](src/core/lighting) as **eo-lighting**, a package with no renderer of its own. It holds the lamp and window catalogue, the light field, the lighting file, and what each graphic should show. The editor draws it with Phaser. A game client installs it straight from this repository and draws the same numbers its own way:
+
+```sh
+pnpm add "github:tabbyed/eomap-js#<commit>&path:/src/core/lighting"
+```
+
+EOWeb does exactly this: it reads `public/maps/NNNNN.lighting.json`, the file this editor saves, and lights the map with Pixi. See the [package README](src/core/lighting/README.md) for the API.
 
 ### Try it
 
