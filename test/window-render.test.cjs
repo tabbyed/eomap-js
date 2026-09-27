@@ -225,17 +225,41 @@ test("reverting a pending replacement to the displayed asset cancels redundant w
   assert.deepEqual([a.refCount, b.refCount], [1, 0]);
 });
 
+// Draw one frame through the real drawFrame, recording nothing but order.
+function drawOnce(map) {
+  map.cachedFrame = {
+    dirty: true,
+    renderTexture: {
+      renderTarget: {},
+      texture: { setFilter() {} },
+      camera: { getWorldPoint: () => ({ x: 0, y: 0 }) },
+      setSize() {
+        return this;
+      },
+      clear() {
+        return this;
+      },
+      beginDraw() {},
+      endDraw() {},
+    },
+  };
+  map.drawScale = 1;
+  map.batchDrawFrame = () => {};
+  map.drawFrame();
+}
+
 test("static visible maps retain their cached frame across animation ticks", async () => {
   const map = makeMap();
   const resource = entryFor(477, 20, 200);
   await install(map, 477, resource.entry);
-  map.cachedFrame = { dirty: false };
-  map.animationFrame = -1;
-  map.updateAnimationFrame();
+  map.lighting.textures = { getWindow: () => resource.mask };
+  drawOnce(map);
+  map.updateAnimationFrame(600);
   assert.equal(map.cachedFrame.dirty, false);
+  // The frame decides: once a drawn frame shows animated art, ticks redraw.
   resource.entry.asset.animationFrames = [{}];
-  map.animationFrame = -1;
-  map.updateAnimationFrame();
+  drawOnce(map);
+  map.updateAnimationFrame(1200);
   assert.equal(map.cachedFrame.dirty, true);
 });
 

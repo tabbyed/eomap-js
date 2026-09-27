@@ -114,20 +114,13 @@ export class LightingRenderer {
     );
   }
 
-  // Flames step on a shared clock. Whether the cached frame must be redrawn:
-  // the step changed while lighting shows a graphic with a moving flame.
+  // Flames step on a shared clock. Whether the step changed; the map
+  // redraws for it only if its last frame showed a flame.
   updateFlames(time) {
     const step = flameStep(time);
     if (step === this.flameStep) return false;
     this.flameStep = step;
-    return (
-      this.enabled &&
-      this.map.renderList.some(
-        (graphic) =>
-          graphic.layer === Layer.Objects &&
-          FLAMES.has(graphic.cacheEntry.resourceID - 100),
-      )
-    );
+    return true;
   }
 
   // Emission, flame and glass for one graphic, or null when it has none.

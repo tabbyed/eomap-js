@@ -128,6 +128,11 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.renderList = null;
     this.cachedFrame = null;
     this.animationFrame = 0;
+    // Whether the last drawn frame showed art that changes with the clock:
+    // native animation or a moving flame. drawFrame records it, so a clock
+    // step costs O(1) rather than a scan of the render list.
+    this.showsAnimation = false;
+    this.showsFlames = false;
 
     this.renderListChangesSinceLastTick = 0;
     this.dirtyRenderList = false;
@@ -769,10 +774,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     let drawOffsetX = worldPoint.x - drawWorldPoint.x;
     let drawOffsetY = worldPoint.y - drawWorldPoint.y;
 
+    let showsAnimation = false,
+      showsFlames = false;
     for (let tileGraphic of this.renderList) {
       let asset = tileGraphic.cacheEntry.asset;
       let frame = asset.getFrame(this.animationFrame);
+      if (asset.animationFrames?.length) showsAnimation = true;
       const lit = this.lighting.prepare(renderTexture, tileGraphic);
+      if (lit?.flame) showsFlames = true;
       if (lit)
         this.lighting.drawBehind(
           renderTexture,
@@ -801,6 +810,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
 
     renderTexture.endDraw();
+    this.showsAnimation = showsAnimation;
+    this.showsFlames = showsFlames;
   }
 
   batchDrawFrame(
@@ -936,19 +947,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.updateAnimationFrame();
   }
 
-  updateAnimationFrame() {
-    let oldAnimationFrame = this.animationFrame;
-    const now = performance.now();
-    this.animationFrame = Math.trunc(now / 600) % 4;
-    if (oldAnimationFrame !== this.animationFrame) {
-      if (
-        this.renderList.some(
-          (graphic) => graphic.cacheEntry.asset.animationFrames?.length,
-        )
-      )
-        this.invalidateCachedFrame();
+  updateAnimationFrame(now = performance.now()) {
+    const animationFrame = Math.trunc(now / 600) % 4;
+    if (animationFrame !== this.animationFrame) {
+      this.animationFrame = animationFrame;
+      if (this.showsAnimation) this.invalidateCachedFrame();
     }
-    if (this.lighting.updateFlames(now)) this.invalidateCachedFrame();
+    if (this.lighting.updateFlames(now) && this.showsFlames)
+      this.invalidateCachedFrame();
   }
 
   invalidateCachedFrame() {

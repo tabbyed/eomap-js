@@ -7,6 +7,7 @@ global.Phaser = {
   Utils: { Array: { Remove: () => {} } },
   Display: { Canvas: { CanvasPool: {} } },
   Class: { mixin() {} },
+  BlendModes: { ADD: 1 },
   GameObjects: {
     GameObject: class {
       destroy() {}
@@ -233,13 +234,52 @@ function candle(map, graphic = 587) {
     tileX: 4,
     tileY: 5,
     alpha: 1,
-    cacheEntry: { resourceID: graphic + 100, loadingComplete: null, asset: {} },
+    cacheEntry: {
+      resourceID: graphic + 100,
+      loadingComplete: null,
+      asset: { getFrame: () => "art" },
+    },
   };
   map.renderList.push(tileGraphic);
   return tileGraphic;
 }
 
-test("flames redraw the map only while lighting shows one, once per step", () => {
+// Draw one frame through the real drawFrame, with the GPU batch stubbed.
+function drawOnce(map) {
+  Object.assign(map, {
+    drawScale: 1,
+    camera: {
+      width: 320,
+      height: 240,
+      zoom: 1,
+      scrollX: 0,
+      scrollY: 0,
+      preRender() {},
+      getWorldPoint: () => ({ x: 0, y: 0 }),
+    },
+    cachedFrame: {
+      dirty: true,
+      renderTexture: {
+        renderTarget: {},
+        renderer: { setBlendMode() {} },
+        texture: { setFilter() {} },
+        camera: { getWorldPoint: () => ({ x: 0, y: 0 }) },
+        setSize() {
+          return this;
+        },
+        clear() {
+          return this;
+        },
+        beginDraw() {},
+        endDraw() {},
+      },
+    },
+    batchDrawFrame() {},
+  });
+  map.drawFrame();
+}
+
+test("flames redraw the map only while its last frame showed one, once per step", () => {
   const map = makeMap();
   const step = (n) => {
     let t = 0;
@@ -248,12 +288,20 @@ test("flames redraw the map only while lighting shows one, once per step", () =>
   };
   map.lighting.enabled = true;
   map.lighting.flameStep = flameStep(step(10));
-  assert.equal(map.lighting.updateFlames(step(11)), false, "no flame in view");
+  drawOnce(map);
+  map.updateAnimationFrame(step(11));
+  assert.equal(map.cachedFrame.dirty, false, "no flame in view");
   candle(map);
-  assert.equal(map.lighting.updateFlames(step(12)), true);
-  assert.equal(map.lighting.updateFlames(step(12) + 1), false, "same step");
+  drawOnce(map);
+  map.updateAnimationFrame(step(12));
+  assert.equal(map.cachedFrame.dirty, true);
+  map.cachedFrame.dirty = false;
+  map.updateAnimationFrame(step(12) + 1);
+  assert.equal(map.cachedFrame.dirty, false, "same step");
   map.lighting.enabled = false;
-  assert.equal(map.lighting.updateFlames(step(13)), false, "lighting hidden");
+  drawOnce(map);
+  map.updateAnimationFrame(step(13));
+  assert.equal(map.cachedFrame.dirty, false, "lighting hidden");
 });
 
 test("a lit candle draws its flameless base with the current frame; switched off, the game's art", () => {
