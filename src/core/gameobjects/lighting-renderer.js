@@ -2,6 +2,12 @@ import { LightField } from "../lighting/field/light-field.js";
 import { lampAt, lampPreset } from "../lighting/model/lamps.js";
 import { projectLight } from "../lighting/model/light-geometry.js";
 import { emissionAppearance } from "../lighting/appearance/lamp-emission.js";
+import {
+  FLAMES,
+  flameFlicker,
+  flameFrame,
+  flameStep,
+} from "../lighting/appearance/flame-animation.js";
 import { EmissionTextures } from "./emission-textures.js";
 import { windowGlassAt } from "../lighting/model/windows.js";
 import { windowAppearance } from "../lighting/appearance/window-emission.js";
@@ -36,6 +42,7 @@ export class LightingRenderer {
     this.enabled = false;
     // A lamp being moved: its preview replaces it, so it must not glow.
     this.displacedLampKey = null;
+    this.flameStep = flameStep(performance.now());
   }
 
   get emf() {
@@ -111,7 +118,24 @@ export class LightingRenderer {
     );
   }
 
-  // Emission and glass for one graphic, or null when it has neither.
+  // Flames step on a shared clock. Whether the cached frame must be redrawn:
+  // the step changed while lighting shows a graphic with a moving flame.
+  updateFlames(time) {
+    const step = flameStep(time);
+    if (step === this.flameStep) return false;
+    this.flameStep = step;
+    return (
+      this.enabled &&
+      this.map.renderList.some(
+        (graphic) =>
+          graphic.layer === Layer.Objects &&
+          FLAMES.has(graphic.cacheEntry.resourceID - 100),
+      )
+    );
+  }
+
+  // Emission, flame and glass for one graphic, or null when it has none.
+  // A moving flame also names the still `frame` to draw in place of the art.
   prepare(renderTexture, graphic) {
     const lamp =
       this.enabled &&
@@ -120,22 +144,37 @@ export class LightingRenderer {
         ? lampAt(this.emf, this.settings, graphic.tileX, graphic.tileY)
         : null;
     const appearance = lamp && emissionAppearance(lamp);
-    const emission =
-      appearance?.enabled &&
+    const shown =
+      lamp &&
       lamp.key !== this.displacedLampKey &&
       graphic.cacheEntry.resourceID === lamp.graphic + 100 &&
-      !graphic.cacheEntry.loadingComplete
-        ? this.textures.get(lamp.graphic)
+      !graphic.cacheEntry.loadingComplete;
+    const emission =
+      shown && appearance.enabled ? this.textures.get(lamp.graphic) : null;
+    // A switched-off light keeps the game's still flame.
+    const flame =
+      shown && lamp.enabled !== false && FLAMES.has(lamp.graphic)
+        ? this.textures.getFlame(lamp.graphic)
         : null;
     // Prepare masks even with the preview off so unlit panes remain pickable.
     const glass = this.windowGlass(graphic);
     for (const item of glass) item.texture = this.textures.getWindow(item.spec);
-    if (!emission && !glass.length) return null;
-    return { lamp, appearance, emission, glass };
+    if (!emission && !flame && !glass.length) return null;
+    if (!flame) return { lamp, appearance, emission, glass };
+    const step = this.flameStep;
+    return {
+      lamp,
+      appearance,
+      emission,
+      glass,
+      frame: flame.base,
+      flame: flame.frames[flameFrame(lamp.key, step, flame.frames.length)],
+      flicker: flameFlicker(lamp.key, step),
+    };
   }
 
   drawBehind(renderTexture, graphic, extras, offsetX, offsetY) {
-    const { lamp, appearance, emission } = extras;
+    const { lamp, appearance, emission, flicker = 1 } = extras;
     if (!emission) return;
     const source = projectLight(lamp);
     const renderer = renderTexture.renderer;
@@ -147,7 +186,7 @@ export class LightingRenderer {
         emission.halo,
         source.x - emission.halo.width / 2 - offsetX,
         source.sourceY - emission.halo.height / 2 - offsetY,
-        appearance.haloAlpha * graphic.alpha,
+        appearance.haloAlpha * flicker * graphic.alpha,
         null,
         appearance.haloColor,
       );
@@ -157,16 +196,27 @@ export class LightingRenderer {
   }
 
   drawOnTop(renderTexture, graphic, extras, offsetX, offsetY) {
-    const { appearance, emission, glass } = extras;
+    const { appearance, emission, flame, flicker = 1, glass } = extras;
     const x = graphic.x - offsetX,
       y = graphic.y - offsetY;
+    // A flame is its own light, so scene shading never dims it.
+    if (flame)
+      this.map.batchDrawFrame(
+        renderTexture,
+        flame.flame,
+        x + flame.x,
+        y + flame.y,
+        graphic.alpha,
+        null,
+        0xffffff,
+      );
     if (emission)
       this.map.batchDrawFrame(
         renderTexture,
-        emission.mask,
-        x,
-        y,
-        appearance.coreAlpha * graphic.alpha,
+        flame ? flame.core : emission.mask,
+        flame ? x + flame.x : x,
+        flame ? y + flame.y : y,
+        Math.min(1, appearance.coreAlpha * flicker) * graphic.alpha,
         null,
         appearance.coreColor,
       );

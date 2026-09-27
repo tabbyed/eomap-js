@@ -6,6 +6,7 @@ const {
   createHaloPixels,
   emissionAppearance,
 } = require("../src/core/lighting/appearance/lamp-emission");
+const { bulbGlass, lamps } = require("../src/core/lighting/packs/eo-native");
 
 function sprite(width = 30, height = 140) {
   return { width, height, data: new Uint8ClampedArray(width * height * 4) };
@@ -22,11 +23,34 @@ test("native glass emits while metal, wood and pixels outside the glass do not",
   for (const [graphic, x, y] of [
     [7, 5, 12],
     [6, 5, 15],
+    [585, 8, 16],
     [400, 6, 16],
     [89, 11, 17],
     [90, 11, 17],
+    [379, 11, 16],
+    [560, 9, 16],
+    [561, 9, 16],
+    [565, 10, 16],
+    [566, 10, 16],
+    [73, 23, 7],
+    [74, 13, 7],
+    [587, 15, 0],
+    [595, 15, 0],
+    [591, 42, 10],
+    [596, 9, 10],
+    [660, 26, 1],
+    [661, 10, 1],
+    [742, 35, 0],
+    [743, 35, 0],
+    [744, 28, 0],
+    [745, 38, 0],
+    [746, 29, 0],
+    [747, 38, 0],
+    [738, 25, 2],
+    [748, 13, 0],
+    [546, 1, 0],
   ]) {
-    const source = sprite();
+    const source = sprite(64, 140);
     pixel(source, x, y, [255, 222, 132, 255]);
     pixel(source, x + 1, y, [214, 206, 181, 255]);
     pixel(source, x + 2, y, [82, 82, 82, 255]);
@@ -41,6 +65,20 @@ test("native glass emits while metal, wood and pixels outside the glass do not",
     assert.equal(pixel(mask, 0, 0)[3], 0);
     assert.deepEqual(source.data, originalPixels);
   }
+});
+
+test("every lamp graphic, including variants, has exactly one emissive region", () => {
+  const graphics = lamps.flatMap(({ graphic, variants = [] }) => [
+    graphic,
+    ...variants.map((variant) =>
+      typeof variant === "number" ? variant : variant.graphic,
+    ),
+  ]);
+  assert.equal(new Set(graphics).size, graphics.length);
+  assert.deepEqual(
+    [...graphics].sort((a, b) => a - b),
+    [...bulbGlass.keys()].sort((a, b) => a - b),
+  );
 });
 
 test("bulb masks preserve source transparency and leave unknown graphics dark", () => {

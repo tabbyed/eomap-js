@@ -26,7 +26,10 @@ const {
   lightGroundRadius,
 } = require("../src/core/lighting/model/light-geometry");
 const { LightField } = require("../src/core/lighting/field/light-field");
-const { WallGrid } = require("../src/core/lighting/field/walls");
+const {
+  SOLID_WALL_GRAPHICS,
+  WallGrid,
+} = require("../src/core/lighting/field/walls");
 const { LightingCommand } = require("../src/core/command/lighting-command");
 const { MapState } = require("../src/core/state/map-state");
 const { saveMapWithLighting } = require("../src/core/lighting/file/save");
@@ -458,6 +461,30 @@ test("native sources project onto measured bulb centres and retain integer owner
     // Garden lantern: 89 and 90 are identical artwork.
     { graphic: 89, width: 35, height: 42, bulbX: 16, bulbY: 19 },
     { graphic: 90, width: 35, height: 42, bulbX: 16, bulbY: 19 },
+    { graphic: 585, width: 30, height: 140, bulbX: 15, bulbY: 25 },
+    { graphic: 379, width: 33, height: 126, bulbX: 15, bulbY: 19 },
+    { graphic: 560, width: 32, height: 140, bulbX: 16, bulbY: 25 },
+    { graphic: 561, width: 32, height: 140, bulbX: 16, bulbY: 25 },
+    { graphic: 565, width: 32, height: 140, bulbX: 16, bulbY: 25 },
+    { graphic: 566, width: 32, height: 140, bulbX: 16, bulbY: 25 },
+    // Candles project onto their flames; tapers onto the flame above the wick.
+    { graphic: 73, width: 40, height: 71, bulbX: 25, bulbY: 5 },
+    { graphic: 74, width: 40, height: 71, bulbX: 14, bulbY: 5 },
+    { graphic: 587, width: 36, height: 64, bulbX: 17, bulbY: 0 },
+    { graphic: 595, width: 36, height: 64, bulbX: 18, bulbY: 0 },
+    { graphic: 591, width: 57, height: 61, bulbX: 44, bulbY: 9 },
+    { graphic: 596, width: 57, height: 61, bulbX: 12, bulbY: 9 },
+    { graphic: 660, width: 42, height: 64, bulbX: 28, bulbY: 5 },
+    { graphic: 661, width: 42, height: 64, bulbX: 13, bulbY: 5 },
+    { graphic: 742, width: 78, height: 98, bulbX: 37, bulbY: -2 },
+    { graphic: 743, width: 69, height: 98, bulbX: 37, bulbY: -2 },
+    { graphic: 744, width: 71, height: 98, bulbX: 30, bulbY: -2 },
+    { graphic: 745, width: 78, height: 98, bulbX: 40, bulbY: -2 },
+    { graphic: 746, width: 69, height: 98, bulbX: 31, bulbY: -2 },
+    { graphic: 747, width: 71, height: 98, bulbX: 40, bulbY: -2 },
+    { graphic: 738, width: 60, height: 123, bulbX: 27, bulbY: 0 },
+    { graphic: 748, width: 34, height: 40, bulbX: 15, bulbY: -2 },
+    { graphic: 546, width: 42, height: 90, bulbX: 20, bulbY: 20 },
   ];
   const emf = EMF.new(16, 16, "Bulb calibration");
   for (const art of artwork) {
@@ -478,6 +505,29 @@ test("native sources project onto measured bulb centres and retain integer owner
   }
 });
 
+test("sprite variants keep their own geometry but share the preset they place", () => {
+  const emf = EMF.new(8, 8, "Lamp variants");
+  const at = (graphic) => {
+    emf.getTile(3, 3).gfx[1] = graphic;
+    return lampAt(emf, defaultLighting(), 3, 3);
+  };
+  const shelf = at(73),
+    mirror = at(74);
+  assert.equal(mirror.id, shelf.id);
+  assert.equal(mirror.graphic, 74);
+  assert.equal(mirror.height, shelf.height);
+  assert.notDeepEqual(mirror.anchor, shelf.anchor);
+  assert.equal(
+    LAMP_PRESETS.find((preset) => preset.id === mirror.id).graphic,
+    73,
+  );
+  // A variant may also override the source height.
+  assert.equal(at(738).id, at(742).id);
+  assert.notEqual(at(738).height, at(742).height);
+  // Identical artwork listed by graphic ID reuses the preset unchanged.
+  assert.deepEqual(at(585).anchor, at(6).anchor);
+});
+
 test("ground guide shrinks with height and disappears above reach without moving the anchor", () => {
   const light = { ...FREE_LIGHT_PRESET, x: 4, y: 5, radius: 5 };
   assert.equal(lightGroundRadius(light), 5);
@@ -489,6 +539,27 @@ test("ground guide shrinks with height and disappears above reach without moving
   assert.equal(low.x, high.x);
   assert.equal(low.groundY, high.groundY);
   assert.equal(low.sourceY - high.sourceY, 96);
+});
+
+test("indoor walls block light and are shaded as surfaces; their doorways stay open", () => {
+  // Every wall a native shelf candle hangs on.
+  for (const graphic of [262, 369, 379, 384, 394, 407, 411, 423])
+    assert.ok(SOLID_WALL_GRAPHICS.has(graphic), `Wall ${graphic}`);
+  const emf = EMF.new(12, 12, "Indoor walls");
+  // A room's wall along x = 5.5, with a doorway (385) at y = 6.
+  for (let y = 3; y < 9; y++) emf.getTile(5, y).gfx[4] = y === 6 ? 385 : 384;
+  const walls = new WallGrid(emf);
+  assert.equal(walls.edge(5, 5, 1, 0), true);
+  assert.equal(walls.edge(5, 6, 1, 0), false);
+  const lighting = withLight(
+    { ...defaultLighting(), ambient: { color: "#000000", brightness: 0 } },
+    { kind: "free", key: "4,5" },
+    { ...FREE_LIGHT_PRESET, radius: 4 },
+  );
+  const field = new LightField(emf, lighting);
+  assert.equal(field.tint(7, 5), 0, "light leaked through the wall");
+  lighting.lights = { "4,6": lighting.lights["4,5"] };
+  assert.ok(new LightField(emf, lighting).tint(7, 6) > 0, "doorway closed");
 });
 
 test("fractional sources hit both wall orientations from either side and at corners", () => {

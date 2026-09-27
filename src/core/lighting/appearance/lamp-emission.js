@@ -5,6 +5,14 @@ import { ASSET_PACK } from "../packs/index.js";
 // Each lamp's glass region, from the pack catalogue.
 const GLASS_REGIONS = ASSET_PACK.bulbGlass;
 
+/** Whether a native glass or flame colour is hot enough to glow. */
+export function isGlowing(r, g, b) {
+  const luminance = r * 0.2126 + g * 0.7152 + b * 0.0722;
+  // Native glass includes amber 255/222/132 and cream 214/206/181.
+  // The brightest lantern wood is 197/156/107; metal is darker still.
+  return r >= 210 && g >= 200 && luminance >= 200;
+}
+
 /** Build a white tintable mask from an ImageData-like decoded native sprite. */
 export function createBulbMask(pixels, graphic) {
   if (!isRgbaPixels(pixels))
@@ -17,13 +25,10 @@ export function createBulbMask(pixels, graphic) {
   for (let y = region.top; y <= Math.min(height - 1, region.bottom); y++) {
     for (let x = region.left; x <= Math.min(width - 1, region.right); x++) {
       const i = (y * width + x) * 4;
-      const r = source[i],
-        g = source[i + 1],
-        b = source[i + 2];
-      const luminance = r * 0.2126 + g * 0.7152 + b * 0.0722;
-      // Native glass includes amber 255/222/132 and cream 214/206/181.
-      // The brightest lantern wood is 197/156/107; metal is darker still.
-      if (source[i + 3] === 0 || r < 210 || g < 200 || luminance < 200)
+      if (
+        source[i + 3] === 0 ||
+        !isGlowing(source[i], source[i + 1], source[i + 2])
+      )
         continue;
       data[i] = data[i + 1] = data[i + 2] = 255;
       data[i + 3] = source[i + 3];

@@ -782,7 +782,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
       this.batchDrawFrame(
         renderTexture,
-        frame,
+        lit?.frame ?? frame,
         tileGraphic.x - drawOffsetX,
         tileGraphic.y - drawOffsetY,
         tileGraphic.alpha,
@@ -936,7 +936,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
   updateAnimationFrame() {
     let oldAnimationFrame = this.animationFrame;
-    this.animationFrame = Math.trunc(performance.now() / 600) % 4;
+    const now = performance.now();
+    this.animationFrame = Math.trunc(now / 600) % 4;
     if (oldAnimationFrame !== this.animationFrame) {
       if (
         this.renderList.some(
@@ -945,6 +946,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       )
         this.invalidateCachedFrame();
     }
+    if (this.lighting.updateFlames(now)) this.invalidateCachedFrame();
   }
 
   invalidateCachedFrame() {

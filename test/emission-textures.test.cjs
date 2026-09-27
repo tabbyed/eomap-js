@@ -59,6 +59,40 @@ test("many placements share one decode/upload and one halo per lamp type", async
   assert.equal(f.invalidations(), 2);
 });
 
+test("a moving flame decodes its sprites once and uploads its base and every frame", async () => {
+  const f = fixture();
+  for (let i = 0; i < 10; i++) assert.equal(f.cache.getFlame(587), null);
+  assert.equal(f.loads.length, 1);
+  f.loads[0].resolve(pixels(36, 64));
+  await Promise.resolve();
+  await Promise.resolve();
+  const candle = f.cache.getFlame(587);
+  assert.equal(candle.frames.length, 4);
+  // One base, then a colour image and a glow mask per frame.
+  assert.equal(f.textures.length, 1 + 4 * 2);
+  assert.equal(f.cache.getFlame(587), candle);
+  // The brazier also needs its empty bowl.
+  f.cache.getFlame(546);
+  assert.deepEqual(
+    f.loads.slice(1).map(({ id }) => id),
+    [646, 645],
+  );
+  assert.equal(f.cache.getFlame(7), null);
+  assert.equal(f.invalidations(), 1);
+});
+
+test("closing the map during flame decode creates no late GPU resources", async () => {
+  const f = fixture();
+  f.cache.getFlame(587);
+  f.cache.destroy();
+  f.loads[0].resolve(pixels(36, 64));
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(f.textures.length, 0);
+  assert.equal(f.invalidations(), 0);
+  assert.equal(f.cache.getFlame(587), null);
+});
+
 test("closing the map during lamp/window decode creates no late GPU resources", async () => {
   const f = fixture();
   f.cache.get(7);

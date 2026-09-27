@@ -1,0 +1,292 @@
+const assert = require("node:assert/strict");
+const { test } = require("node:test");
+require("../scripts/register-core.cjs");
+global.Phaser = {
+  Math: { Pow2: { IsSize: () => false } },
+  Textures: { Texture: class {}, TextureSource: class {}, LINEAR: 1 },
+  Utils: { Array: { Remove: () => {} } },
+  Display: { Canvas: { CanvasPool: {} } },
+  Class: { mixin() {} },
+  GameObjects: {
+    GameObject: class {
+      destroy() {}
+    },
+    Components: {},
+    GameObjectFactory: { register() {} },
+  },
+};
+const {
+  FLAMES,
+  createFlameAnimation,
+  flameFlicker,
+  flameFrame,
+  flameStep,
+} = require("../src/core/lighting/appearance/flame-animation");
+const { flamePalette } = require("../src/core/lighting/packs/eo-native");
+const { lampPreset } = require("../src/core/lighting/model/lamps");
+const { EOMap } = require("../src/core/gameobjects/eomap");
+const {
+  LightingRenderer,
+} = require("../src/core/gameobjects/lighting-renderer");
+const { EMF } = require("../src/core/data/emf");
+const {
+  defaultLighting,
+  withLight,
+} = require("../src/core/lighting/model/settings");
+
+function sprite(width, height, fill = [90, 60, 30, 255]) {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < data.length; i += 4) data.set(fill, i);
+  return { width, height, data };
+}
+
+const alpha = (pixels, x, y) => pixels.data[(y * pixels.width + x) * 4 + 3];
+const colour = (pixels, x, y) => {
+  const i = (y * pixels.width + x) * 4;
+  return [...pixels.data.slice(i, i + 3)];
+};
+
+test("every moving flame belongs to a lamp and uses only its palette", () => {
+  for (const [graphic, spec] of FLAMES) {
+    assert.ok(lampPreset(graphic), `Graphic ${graphic} is not a lamp`);
+    if (spec.empty) continue;
+    assert.ok(spec.frames.length >= 2);
+    const width = spec.frames[0][0].length,
+      height = spec.frames[0].length;
+    for (const rows of spec.frames) {
+      assert.equal(rows.length, height);
+      for (const row of rows) {
+        assert.equal(row.length, width);
+        for (const key of row) assert.ok(key === "." || flamePalette[key]);
+      }
+    }
+  }
+});
+
+test("a candle's native flame is cleared and replaced by frames that glow only where hot", () => {
+  const pixels = sprite(36, 64);
+  const { base, frames } = createFlameAnimation(pixels, 587);
+  const [left, top, right, bottom] = FLAMES.get(587).clear;
+  for (let y = 0; y < 64; y++)
+    for (let x = 0; x < 36; x++) {
+      const inside = x >= left && x <= right && y >= top && y <= bottom;
+      assert.equal(alpha(base, x, y), inside ? 0 : 255);
+    }
+  assert.deepEqual(pixels.data, sprite(36, 64).data);
+  assert.equal(frames.length, 4);
+  const rows = FLAMES.get(587).frames[1];
+  const frame = frames[1];
+  assert.deepEqual([frame.x, frame.y], [14, -5]);
+  for (let y = 0; y < rows.length; y++)
+    for (let x = 0; x < rows[0].length; x++) {
+      const key = rows[y][x];
+      assert.equal(alpha(frame.flame, x, y), key === "." ? 0 : 255);
+      if (key !== ".")
+        assert.deepEqual(colour(frame.flame, x, y), flamePalette[key]);
+      // Cream and white-hot pixels glow; wick and amber stay unlit.
+      assert.equal(
+        alpha(frame.core, x, y),
+        key === "B" || key === "D" ? 255 : 0,
+      );
+    }
+});
+
+test("a mirror-image candle's flames are its partner's, flipped", () => {
+  const own = createFlameAnimation(sprite(36, 64), 587).frames;
+  const mirror = createFlameAnimation(sprite(36, 64), 595).frames;
+  for (let f = 0; f < own.length; f++) {
+    const { width, height } = own[f].flame;
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++)
+        assert.deepEqual(
+          colour(mirror[f].flame, x, y),
+          colour(own[f].flame, width - 1 - x, y),
+        );
+  }
+});
+
+test("tapers keep their wick and whole sprite, with the flame drawn above", () => {
+  const pixels = sprite(78, 98);
+  const { base, frames } = createFlameAnimation(pixels, 742);
+  assert.deepEqual(base.data, pixels.data);
+  assert.ok(frames.every((frame) => frame.y < 0));
+});
+
+test("the bent brazier fire moves but never covers bowl it left showing", () => {
+  // A 12 x 20 lit sprite over a 12 x 10 empty bowl, bottom-aligned. Fire fills
+  // the top rows and the bowl's middle; the bowl's rims stay uncovered.
+  const empty = sprite(12, 10, [0, 0, 0, 0]);
+  for (let y = 0; y < 10; y++)
+    for (let x = 0; x < 12; x++)
+      empty.data.set(
+        x < 2 || x > 9 ? [120, 120, 120, 255] : [40, 40, 40, 255],
+        (y * 12 + x) * 4,
+      );
+  const lit = sprite(12, 20, [0, 0, 0, 0]);
+  for (let y = 0; y < 20; y++)
+    for (let x = 0; x < 12; x++) {
+      const i = (y * 12 + x) * 4;
+      if (y >= 10)
+        lit.data.set(
+          empty.data.subarray(
+            ((y - 10) * 12 + x) * 4,
+            ((y - 10) * 12 + x) * 4 + 4,
+          ),
+          i,
+        );
+      if (y < 16 && x >= 2 && x <= 9)
+        lit.data.set(x % 3 ? [158, 189, 226, 255] : [255, 255, 255, 255], i);
+    }
+  const { base, frames } = createFlameAnimation(lit, 546, empty);
+  const spec = FLAMES.get(546);
+  for (let y = 0; y < 20; y++)
+    for (let x = 0; x < 12; x++) {
+      const expected = y >= 10 ? colour(empty, x, y - 10) : null;
+      assert.equal(alpha(base, x, y), expected ? 255 : 0);
+      if (expected) assert.deepEqual(colour(base, x, y), expected);
+    }
+  assert.equal(frames.length, spec.count);
+  const fire = new Set(["158,189,226", "255,255,255"]);
+  let moved = false;
+  for (const frame of frames) {
+    assert.deepEqual([frame.x, frame.y], [0, -spec.margin]);
+    for (let row = 0; row < frame.flame.height; row++)
+      for (let x = 0; x < 12; x++) {
+        if (!alpha(frame.flame, x, row)) continue;
+        const y = row - spec.margin;
+        assert.ok(fire.has(colour(frame.flame, x, row).join()));
+        // Rims (grey) never gain fire; only native fire positions or air do.
+        assert.ok(
+          !(y >= 10 && (x < 2 || x > 9)),
+          `Fire covered rim at ${x},${y}`,
+        );
+        assert.equal(
+          alpha(frame.core, x, row) > 0,
+          colour(frame.flame, x, row).join() === "255,255,255",
+        );
+        if (y < 0) moved = true;
+      }
+  }
+  assert.ok(moved, "No frame lifted the fire above the sprite");
+});
+
+test("the flicker clock steps unevenly and flames never hold a shape for two steps", () => {
+  const lengths = new Set();
+  let start = 0;
+  for (let t = 1; t < 5000; t++)
+    if (flameStep(t) !== flameStep(t - 1)) {
+      assert.equal(flameStep(t), flameStep(t - 1) + 1);
+      if (start) lengths.add(t - start);
+      start = t;
+    }
+  assert.ok(lengths.size > 3);
+  assert.ok(Math.min(...lengths) >= 120 && Math.max(...lengths) <= 190);
+  for (const key of ["4,5,587", "4,6,587", "12,1,546"])
+    for (const count of [4, 6])
+      for (let step = 1; step < 400; step++) {
+        const frame = flameFrame(key, step, count);
+        assert.ok(frame >= 0 && frame < count);
+        assert.notEqual(frame, flameFrame(key, step - 1, count));
+        const flicker = flameFlicker(key, step);
+        assert.ok(flicker >= 0.78 && flicker <= 1.12);
+      }
+  const a = [],
+    b = [];
+  for (let step = 0; step < 50; step++) {
+    a.push(flameFrame("4,5,587", step, 4));
+    b.push(flameFrame("4,6,587", step, 4));
+  }
+  assert.notDeepEqual(a, b);
+});
+
+function makeMap() {
+  const map = Object.create(EOMap.prototype);
+  Object.assign(map, {
+    emf: EMF.new(10, 10, "Flames"),
+    renderList: [],
+    animationFrame: 0,
+    cachedFrame: { dirty: false },
+  });
+  map.lighting = new LightingRenderer(map, {}, null);
+  map.lighting.settings = defaultLighting();
+  const flame = {
+    base: "base",
+    frames: [0, 1, 2, 3].map((i) => ({
+      x: 14,
+      y: -3,
+      flame: `flame${i}`,
+      core: `core${i}`,
+    })),
+  };
+  map.lighting.textures = {
+    get: () => ({ mask: "mask", halo: "halo" }),
+    getFlame: () => flame,
+    getWindow: () => null,
+  };
+  return map;
+}
+
+function candle(map, graphic = 587) {
+  map.emf.getTile(4, 5).gfx[1] = graphic;
+  const tileGraphic = {
+    layer: 1,
+    tileX: 4,
+    tileY: 5,
+    alpha: 1,
+    cacheEntry: { resourceID: graphic + 100, loadingComplete: null, asset: {} },
+  };
+  map.renderList.push(tileGraphic);
+  return tileGraphic;
+}
+
+test("flames redraw the map only while lighting shows one, once per step", () => {
+  const map = makeMap();
+  const step = (n) => {
+    let t = 0;
+    while (flameStep(t) < n) t += 10;
+    return t;
+  };
+  map.lighting.enabled = true;
+  map.lighting.flameStep = flameStep(step(10));
+  assert.equal(map.lighting.updateFlames(step(11)), false, "no flame in view");
+  candle(map);
+  assert.equal(map.lighting.updateFlames(step(12)), true);
+  assert.equal(map.lighting.updateFlames(step(12) + 1), false, "same step");
+  map.lighting.enabled = false;
+  assert.equal(map.lighting.updateFlames(step(13)), false, "lighting hidden");
+});
+
+test("a lit candle draws its flameless base with the current frame; switched off, the game's art", () => {
+  const map = makeMap();
+  map.lighting.enabled = true;
+  const graphic = candle(map);
+  const target = { renderTarget: {} };
+  const lit = map.lighting.prepare(target, graphic);
+  assert.equal(lit.frame, "base");
+  assert.ok(/^flame\d$/.test(lit.flame.flame));
+  assert.ok(lit.flicker >= 0.78 && lit.flicker <= 1.12);
+  const drawn = [];
+  map.batchDrawFrame = (_target, frame, x, y, alpha, _graphic, tint) =>
+    drawn.push({ frame, x, y, alpha, tint });
+  graphic.x = 100;
+  graphic.y = 50;
+  map.lighting.drawOnTop(target, graphic, lit, 0, 0);
+  assert.deepEqual(drawn[0], {
+    frame: lit.flame.flame,
+    x: 114,
+    y: 47,
+    alpha: 1,
+    tint: 0xffffff,
+  });
+  assert.equal(drawn[1].frame, lit.flame.core);
+  assert.ok(drawn[1].alpha <= 1);
+
+  const lamp = lit.lamp;
+  map.lighting.settings = withLight(map.lighting.settings, lamp, {
+    ...lamp,
+    enabled: false,
+  });
+  const off = map.lighting.prepare(target, graphic);
+  assert.equal(off?.frame, undefined);
+  assert.equal(off?.flame, undefined);
+});

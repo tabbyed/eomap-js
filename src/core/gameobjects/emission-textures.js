@@ -7,12 +7,16 @@ import {
   WINDOW_DEFINITIONS,
 } from "../lighting/model/windows.js";
 import { maskOutline } from "../lighting/appearance/window-emission.js";
+import {
+  createFlameAnimation,
+  FLAMES,
+} from "../lighting/appearance/flame-animation.js";
 import { createPixelHitMask } from "../gfx/pixel-hit-mask.js";
 
 let nextCacheId = 0;
 
-// Three small native masks and one halo per open map, shared by every lamp.
-// Decode/upload once; colour and strength are vertex tint/alpha changes.
+// Small native masks, flame frames and one halo per open map, shared by every
+// lamp. Decode/upload once; colour and strength are vertex tint/alpha changes.
 export class EmissionTextures {
   constructor(scene, loader, invalidate) {
     this.manager = scene.textures;
@@ -21,6 +25,7 @@ export class EmissionTextures {
     this.prefix = `lighting-emission-${++nextCacheId}`;
     this.entries = new Map();
     this.windows = new Map();
+    this.flames = new Map();
     this.keys = [];
     this.revision = 0;
     this.destroyed = false;
@@ -114,12 +119,51 @@ export class EmissionTextures {
     return this.windows.get(spec.key);
   }
 
+  // A moving flame's still base and frames, shared by every placement.
+  getFlame(graphic) {
+    const spec = FLAMES.get(graphic);
+    if (this.destroyed || !spec) return null;
+    if (!this.flames.has(graphic)) {
+      const ids = spec.empty ? [graphic, spec.empty] : [graphic];
+      if (!ids.every((id) => this.loader.resourceInfo(4, id + 100)))
+        return null;
+      this.flames.set(graphic, null);
+      Promise.all(ids.map((id) => this.loader.loadResource(4, id + 100)))
+        .then(([pixels, empty]) => {
+          if (this.destroyed) return;
+          const animation = createFlameAnimation(pixels, graphic, empty);
+          const upload = (name, framePixels) =>
+            this.createTexture(
+              `flame-${graphic}-${name}`,
+              framePixels,
+              Phaser.Textures.NEAREST,
+            );
+          this.flames.set(graphic, {
+            base: upload("base", animation.base),
+            frames: animation.frames.map((frame, i) => ({
+              x: frame.x,
+              y: frame.y,
+              flame: upload(i, frame.flame),
+              core: upload(`${i}-core`, frame.core),
+            })),
+          });
+          this.revision++;
+          this.invalidate();
+        })
+        .catch((error) => {
+          if (!this.destroyed) console.warn("Unable to prepare flame", error);
+        });
+    }
+    return this.flames.get(graphic);
+  }
+
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
     for (const key of this.keys) this.manager.remove(key);
     this.entries.clear();
     this.windows.clear();
+    this.flames.clear();
     this.keys = [];
     this.halo = null;
   }

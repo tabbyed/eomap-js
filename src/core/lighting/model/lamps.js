@@ -23,14 +23,18 @@ export const FREE_LIGHT_PRESET = {
   description: "Light any tile without adding a graphic",
 };
 
-// Called for every object graphic on each placement and redraw.
+// Called for every object graphic on each placement and redraw. A variant is
+// either identical artwork (a graphic ID) or its own sprite, such as a mirror
+// image, that overrides the preset's anchor or height.
 const PRESETS_BY_GRAPHIC = new Map(
-  LAMP_PRESETS.flatMap((preset) =>
-    [preset.graphic, ...(preset.variants ?? [])].map((graphic) => [
-      graphic,
-      preset,
-    ]),
-  ),
+  LAMP_PRESETS.flatMap((preset) => [
+    [preset.graphic, preset],
+    ...(preset.variants ?? []).map((variant) =>
+      typeof variant === "number"
+        ? [variant, preset]
+        : [variant.graphic, { ...preset, ...variant }],
+    ),
+  ]),
 );
 
 export function lampPreset(graphic) {
