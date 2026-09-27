@@ -14,6 +14,10 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      # Secrets can't be read in a step's `if`, so expose whether one is set.
+      HAS_MAC_CERTS: ${{ secrets.mac_certs != '' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,9 +28,13 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Only sign when the repo has a signing certificate. Without one, CSC_LINK
+      # would be empty and electron-builder fails with "not a file", so the macOS
+      # build is left unsigned instead. Add the mac_certs and
+      # mac_certs_password secrets to sign it.
       - name: Prepare code signing for macOS
         uses: allenevans/set-env@7ccfd08576e7096fe3b98928bd0320d2b9a65728 # v4.0.0
-        if: startsWith(matrix.os, 'macos')
+        if: startsWith(matrix.os, 'macos') && env.HAS_MAC_CERTS == 'true'
         with:
           CSC_LINK: ${{ secrets.mac_certs }}
           CSC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
