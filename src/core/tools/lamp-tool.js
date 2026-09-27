@@ -57,7 +57,7 @@ export class LampTool extends Tool {
     if (this.previewLight) {
       this.previewField.setPreview(null);
       this.previewLight = null;
-      this.scene.map.displacedLampKey = null;
+      this.scene.map.lighting.displacedLampKey = null;
       this.scene.map.invalidateCachedFrame();
     }
   }
@@ -66,7 +66,7 @@ export class LampTool extends Tool {
     // Tall windows can project outside the map's ground footprint. Picking
     // their visible glass must not depend on the tile underneath the cursor.
     if (pointer.button === 0 && this.state.mode === "select") {
-      const window = scene.map.pickWindow(pointer.x, pointer.y);
+      const window = scene.map.lighting.pickWindow(pointer.x, pointer.y);
       if (window) {
         this.clearPreview();
         this.notify({
@@ -219,7 +219,7 @@ export class LampTool extends Tool {
     for (const { x, y, spec } of windowGlassSprites(map.emf, window)) {
       const graphic =
         map.tileGraphics[map.getTileGraphicIndex(x, y, window.layer)];
-      const texture = map.lampTextures.getWindow(spec);
+      const texture = map.lighting.textures.getWindow(spec);
       if (graphic && texture && map.renderList.includes(graphic))
         this.drawGlassOutline(graphic, texture, 2, 1);
     }
@@ -237,8 +237,8 @@ export class LampTool extends Tool {
           this.drawSourceGuide(lamp, LAMP_GUIDE, lamp.enabled ? 0.6 : 0.3);
         continue;
       }
-      for (const { spec } of map.windowGlass(graphic)) {
-        const texture = map.lampTextures.getWindow(spec);
+      for (const { spec } of map.lighting.windowGlass(graphic)) {
+        const texture = map.lighting.textures.getWindow(spec);
         if (texture) this.drawGlassOutline(graphic, texture, 1.5, 0.6);
       }
     }
@@ -336,7 +336,7 @@ export class LampTool extends Tool {
     if (!state) return false;
     const active = scene.selectedTool === "lighting";
     const map = scene.map;
-    const settings = map.lightingSettings || scene.mapState.lighting;
+    const settings = map.lighting.settings || scene.mapState.lighting;
     const signature = [
       active,
       state,
@@ -349,10 +349,10 @@ export class LampTool extends Tool {
       map.width,
       map.height,
       settings,
-      map.lightField,
+      map.lighting.field,
       map.layerVisibility,
       map.renderList,
-      map.lampTextures?.revision,
+      map.lighting.textures?.revision,
       this.cacheEntry?.loadingComplete === null,
     ];
     // References are compared too, so inspector edits invalidate the guide.
@@ -426,7 +426,7 @@ export class LampTool extends Tool {
           const appearance = emissionAppearance(lamp);
           const emission =
             valid && state.preview && appearance.enabled
-              ? map.lampTextures?.get(lamp.graphic)
+              ? map.lighting.textures?.get(lamp.graphic)
               : null;
           if (emission) {
             const projected = projectLight(lamp);
@@ -452,11 +452,11 @@ export class LampTool extends Tool {
         }
         if (valid && state.preview) {
           this.previewLight = lamp;
-          this.previewField = map.lightField;
-          map.displacedLampKey =
+          this.previewField = map.lighting.field;
+          map.lighting.displacedLampKey =
             movedLight?.kind === "lamp" ? movedLight.key : null;
           // A move previews the same source at its destination, not two lamps.
-          map.lightField.setPreview({ light: lamp, replaces: movedLight });
+          map.lighting.field.setPreview({ light: lamp, replaces: movedLight });
           map.invalidateCachedFrame();
         }
       }

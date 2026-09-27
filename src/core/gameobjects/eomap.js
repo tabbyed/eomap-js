@@ -1,22 +1,9 @@
 import { arrayEquals, binaryInsert, removeFirst } from "../util/array-utils";
 import { TileSpec } from "../data/emf";
 import { GridType } from "../gfx/texture-cache";
-import { LightField } from "../lighting/light-field.js";
-import { lampAt, lampPreset } from "../lighting/lamps.js";
-import { projectLight } from "../lighting/light-geometry.js";
-import { emissionAppearance } from "../lighting/lamp-emission.js";
-import { LampTextures } from "../lighting/lamp-textures.js";
-import { windowGlassAt } from "../lighting/windows.js";
-import { windowAppearance } from "../lighting/window-emission.js";
-import { pixelHit } from "../gfx/pixel-hit-mask.js";
-import { SOLID_WALL_GRAPHICS } from "../lighting/walls.js";
-import {
-  wallSurfaceVertex,
-  wallSurfaceSlices,
-} from "../lighting/wall-surface.js";
+import { LightingRenderer } from "./lighting-renderer.js";
 
 const SECTION_SIZE = 256;
-const NO_GLASS = Object.freeze([]);
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
 const RDG = 0.001; // gap between depth of each row of tiles
@@ -119,9 +106,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     super(scene, "EOMap");
 
     this.textureCache = textureCache;
-    this.lampTextures = new LampTextures(scene, textureCache.gfxLoader, () =>
-      this.invalidateCachedFrame(),
-    );
+    this.lighting = new LightingRenderer(this, scene, textureCache.gfxLoader);
     this.emf = emf;
     this.layerVisibility = layerVisibility;
 
@@ -166,15 +151,13 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.tileGraphics = {};
     this.renderList = [];
 
-    // Resize rebuilds the field once below, not once for every restored tile.
-    this.lightField = null;
+    this.lighting.reset();
 
     this.initSections();
     this.initEntityMaps();
     this.initTileGraphics();
 
-    if (this.lightingSettings)
-      this.lightField = new LightField(this.emf, this.lightingSettings);
+    this.lighting.rebuild();
 
     this.cull();
   }
@@ -259,15 +242,11 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     let width = tileGraphic.width;
     let height = tileGraphic.height;
-    if (
-      tileGraphic.layer === 1 &&
-      lampPreset(tileGraphic.cacheEntry.resourceID - 100)
-    ) {
-      x -= 32;
-      y -= 32;
-      width += 64;
-      height += 64;
-    }
+    const padding = this.lighting.sectionPadding(tileGraphic);
+    x -= padding;
+    y -= padding;
+    width += padding * 2;
+    height += padding * 2;
 
     let top = Math.trunc(y / SECTION_SIZE);
     let bottom = Math.trunc((y + height) / SECTION_SIZE);
@@ -328,9 +307,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
 
     this.emf.getTile(x, y).gfx[layer] = gfx;
-    if (layer === 1 && this.lightField) this.lightField.updateTile(x, y);
-    if ((layer === 3 || layer === 4) && this.lightField)
-      this.lightField.queueWall(x, y);
+    this.lighting.tileChanged(x, y, layer);
 
     let cacheEntry = null;
     if (gfx) {
@@ -744,94 +721,23 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     return this.cachedFrame;
   }
 
-  // `setLighting` takes committed settings and drops any preview, so a
-  // commit or undo can never leave an inspector preview on screen.
+  // Committed lighting; it drops any preview, so a commit or undo can never
+  // leave an inspector preview on screen.
   setLighting(settings) {
-    this.committedLighting = settings;
-    this.showLighting(settings);
+    this.lighting.setLighting(settings);
   }
 
   // Show settings that are not committed, such as a slider being dragged.
   previewLighting(settings) {
-    this.showLighting(settings);
+    this.lighting.previewLighting(settings);
   }
 
   clearLightingPreview() {
-    if (this.committedLighting) this.showLighting(this.committedLighting);
-  }
-
-  showLighting(settings) {
-    if (this.lightField && this.lightingSettings === settings) return;
-    this.lightingSettings = settings;
-    if (this.lightField) this.lightField.setSettings(settings);
-    else this.lightField = new LightField(this.emf, settings);
-    this.invalidateCachedFrame();
+    this.lighting.clearPreview();
   }
 
   setLightingPreview(enabled) {
-    if (this.lightingPreview === enabled) return;
-    this.lightingPreview = enabled;
-    this.invalidateCachedFrame();
-  }
-
-  // Glass shown by a loaded wall graphic, with the light each part belongs
-  // to. A replacement still decoding shows the previous artwork, so no glass.
-  windowGlass(graphic) {
-    const entry = graphic.cacheEntry;
-    if ((graphic.layer !== 3 && graphic.layer !== 4) || entry.loadingComplete)
-      return NO_GLASS;
-    const glass = windowGlassAt(
-      this.emf,
-      this.lightingSettings,
-      graphic.tileX,
-      graphic.tileY,
-      graphic.layer,
-    );
-    return glass.length
-      ? glass.filter(({ spec }) => entry.resourceID === spec.graphic + 100)
-      : NO_GLASS;
-  }
-
-  pickWindow(screenX, screenY) {
-    const dirty = this.camera.dirty;
-    this.camera.preRender();
-    this.camera.dirty = dirty;
-    const point = this.camera.getWorldPoint(screenX, screenY);
-    // Depth order and native alpha prevent selecting glass hidden behind
-    // a foreground wall or prop. O(visible graphics), only on a click.
-    for (let i = this.renderList.length - 1; i >= 0; i--) {
-      const graphic = this.renderList[i];
-      if (
-        graphic.layer === 0 ||
-        graphic.layer === 7 ||
-        graphic.layer >= 9 ||
-        graphic.alpha < 0.5
-      )
-        continue;
-      const entry = graphic.cacheEntry;
-      if (entry.loadingComplete) continue;
-      const frame = entry.asset.getFrame(this.animationFrame);
-      const x = Math.floor(point.x - graphic.x),
-        y = Math.floor(point.y - graphic.y);
-      if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) continue;
-      // A partner sprite's glass selects the window that owns it.
-      for (const { light, spec } of this.windowGlass(graphic))
-        if (pixelHit(this.lampTextures.getWindow(spec)?.hitMask, x, y))
-          return light;
-      const base = entry.asset.textureFrame;
-      // An already-loaded floor asset can acquire a hit mask when first used
-      // on the Top layer. Until that decode finishes, avoid picking through it.
-      if (!entry.hitMask) return null;
-      if (
-        pixelHit(
-          entry.hitMask,
-          x + frame.cutX - base.cutX,
-          y + frame.cutY - base.cutY,
-        )
-      )
-        return null;
-    }
-    return null;
+    this.lighting.setEnabled(enabled);
   }
 
   drawFrame() {
@@ -864,48 +770,15 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     for (let tileGraphic of this.renderList) {
       let asset = tileGraphic.cacheEntry.asset;
       let frame = asset.getFrame(this.animationFrame);
-      const lamp =
-        this.lightingPreview &&
-        renderTexture.renderTarget &&
-        tileGraphic.layer === 1
-          ? lampAt(
-              this.emf,
-              this.lightingSettings,
-              tileGraphic.tileX,
-              tileGraphic.tileY,
-            )
-          : null;
-      const appearance = lamp && emissionAppearance(lamp);
-      const emission =
-        appearance?.enabled &&
-        lamp.key !== this.displacedLampKey &&
-        tileGraphic.cacheEntry.resourceID === lamp.graphic + 100 &&
-        !tileGraphic.cacheEntry.loadingComplete
-          ? this.lampTextures.get(lamp.graphic)
-          : null;
-      // Prepare masks even with the preview off so unlit panes remain pickable.
-      const glass = this.windowGlass(tileGraphic);
-      for (const item of glass)
-        item.texture = this.lampTextures.getWindow(item.spec);
-      if (emission) {
-        const source = projectLight(lamp);
-        const renderer = renderTexture.renderer;
-        const previousBlend = renderer.currentBlendMode;
-        renderer.setBlendMode(Phaser.BlendModes.ADD);
-        try {
-          this.batchDrawFrame(
-            renderTexture,
-            emission.halo,
-            source.x - emission.halo.width / 2 - drawOffsetX,
-            source.sourceY - emission.halo.height / 2 - drawOffsetY,
-            appearance.haloAlpha * tileGraphic.alpha,
-            null,
-            appearance.haloColor,
-          );
-        } finally {
-          renderer.setBlendMode(previousBlend);
-        }
-      }
+      const lit = this.lighting.prepare(renderTexture, tileGraphic);
+      if (lit)
+        this.lighting.drawBehind(
+          renderTexture,
+          tileGraphic,
+          lit,
+          drawOffsetX,
+          drawOffsetY,
+        );
 
       this.batchDrawFrame(
         renderTexture,
@@ -915,31 +788,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         tileGraphic.alpha,
         tileGraphic,
       );
-      if (emission) {
-        this.batchDrawFrame(
+      if (lit)
+        this.lighting.drawOnTop(
           renderTexture,
-          emission.mask,
-          tileGraphic.x - drawOffsetX,
-          tileGraphic.y - drawOffsetY,
-          appearance.coreAlpha * tileGraphic.alpha,
-          null,
-          appearance.coreColor,
+          tileGraphic,
+          lit,
+          drawOffsetX,
+          drawOffsetY,
         );
-      }
-      if (!this.lightingPreview || !renderTexture.renderTarget) continue;
-      for (const { light, texture } of glass) {
-        const glow = windowAppearance(light);
-        if (!texture || !glow.enabled) continue;
-        this.batchDrawFrame(
-          renderTexture,
-          texture.mask,
-          tileGraphic.x - drawOffsetX,
-          tileGraphic.y - drawOffsetY,
-          glow.alpha * tileGraphic.alpha,
-          null,
-          glow.color,
-        );
-      }
     }
 
     renderTexture.endDraw();
@@ -973,13 +829,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
 
     if (renderTexture.renderTarget) {
-      if (
-        emissionTint === null &&
-        this.lightingPreview &&
-        this.lightField &&
-        tileGraphic.layer < 9
-      ) {
-        this.batchLitFrame(
+      if (emissionTint === null && this.lighting.shades(tileGraphic)) {
+        this.lighting.batchLitFrame(
           renderTexture,
           textureFrame,
           matrix,
@@ -1005,94 +856,6 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     } else {
       this.batchTextureFrameCanvas(renderTexture, textureFrame, matrix, alpha);
     }
-  }
-
-  batchLitFrame(renderTexture, frame, matrix, alpha, graphic) {
-    const pipeline = renderTexture.pipeline;
-    pipeline.manager.set(pipeline);
-    const unit = pipeline.renderer.setTextureSource(frame.source);
-    const pack = (rgb) => {
-      // MultiPipeline's fragment shader already swizzles the vertex tint.
-      return Phaser.Renderer.WebGL.Utils.getTintAppendFloatAlpha(rgb, alpha);
-    };
-    const x = graphic.tileX,
-      y = graphic.tileY;
-    const tint = (x, y, height = 0) => pack(this.lightField.tint(x, y, height));
-    const solidWall =
-      (graphic.layer === 3 || graphic.layer === 4) &&
-      SOLID_WALL_GRAPHICS.has(this.emf.getTile(x, y).gfx[graphic.layer]);
-    if (solidWall) {
-      // Neighbouring graphics share surface coordinates AND interpolation rows.
-      // Sampling one tile centre across each whole bitmap creates visible seams.
-      const surfaceTint = (px, py) => {
-        const p = wallSurfaceVertex(graphic.layer, x, y, frame.height, px, py);
-        return tint(p.sampleX, p.sampleY, Math.max(0, p.height));
-      };
-      const rows = wallSurfaceSlices(x, y, frame.height);
-      // Adjacent slices share a row, so sample each row's edge tints once.
-      let topLeft = surfaceTint(0, rows[0]),
-        topRight = surfaceTint(frame.width, rows[0]);
-      for (let i = 0; i < rows.length - 1; i++) {
-        const top = rows[i],
-          bottom = rows[i + 1];
-        const bottomLeft = surfaceTint(0, bottom),
-          bottomRight = surfaceTint(frame.width, bottom);
-        pipeline.batchQuad(
-          null,
-          matrix.getX(0, top),
-          matrix.getY(0, top),
-          matrix.getX(0, bottom),
-          matrix.getY(0, bottom),
-          matrix.getX(frame.width, bottom),
-          matrix.getY(frame.width, bottom),
-          matrix.getX(frame.width, top),
-          matrix.getY(frame.width, top),
-          frame.u0,
-          frame.v0 + ((frame.v1 - frame.v0) * top) / frame.height,
-          frame.u1,
-          frame.v0 + ((frame.v1 - frame.v0) * bottom) / frame.height,
-          topLeft,
-          topRight,
-          bottomLeft,
-          bottomRight,
-          0,
-          frame.source.glTexture,
-          unit,
-        );
-        topLeft = bottomLeft;
-        topRight = bottomRight;
-      }
-      return;
-    }
-    let tl, tr, bl, br;
-    if (graphic.layer === 0) {
-      tl = pack(this.lightField.groundCornerTint(x, y, -1, 0));
-      tr = pack(this.lightField.groundCornerTint(x, y, 0, -1));
-      bl = pack(this.lightField.groundCornerTint(x, y, 0, 1));
-      br = pack(this.lightField.groundCornerTint(x, y, 1, 0));
-    } else tl = tr = bl = br = tint(x, y);
-    pipeline.batchQuad(
-      null,
-      matrix.getX(0, 0),
-      matrix.getY(0, 0),
-      matrix.getX(0, frame.height),
-      matrix.getY(0, frame.height),
-      matrix.getX(frame.width, frame.height),
-      matrix.getY(frame.width, frame.height),
-      matrix.getX(frame.width, 0),
-      matrix.getY(frame.width, 0),
-      frame.u0,
-      frame.v0,
-      frame.u1,
-      frame.v1,
-      tl,
-      tr,
-      bl,
-      br,
-      0,
-      frame.source.glTexture,
-      unit,
-    );
   }
 
   batchTextureFrameCanvas(renderTexture, frame, matrix, alpha) {
@@ -1153,7 +916,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   update(_time, _delta) {
-    this.lightField?.flushWalls();
+    this.lighting.update();
     if (this.camera.dirty) {
       this.cull();
       this.updateDrawScale();
@@ -1191,7 +954,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   destroy(fromScene) {
-    this.lampTextures.destroy();
+    this.lighting.destroy();
     for (let index in this.tileGraphics) {
       this.releaseTileGraphic(this.tileGraphics[index]);
       delete this.tileGraphics[index];

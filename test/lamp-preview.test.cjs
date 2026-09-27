@@ -64,8 +64,7 @@ function fixture(kind) {
   const field = new LightField(emf, lighting);
   const map = {
     emf,
-    lightField: field,
-    lightingSettings: lighting,
+    lighting: { field, settings: lighting, displacedLampKey: null },
     scrollX: 0,
     scrollY: 0,
     zoom: 1,
@@ -80,8 +79,8 @@ function fixture(kind) {
     },
     invalidateCachedFrame() {},
     setLighting(settings) {
-      this.lightingSettings = settings;
-      field.setSettings(settings);
+      this.lighting.settings = settings;
+      this.lighting.field.setSettings(settings);
     },
     setGraphic(x, y, graphic) {
       emf.getTile(x, y).gfx[1] = graphic;
@@ -149,12 +148,15 @@ for (const kind of ["free", "lamp"]) {
   test(`${kind}: rebuilding the map field refreshes an active move preview`, () => {
     const { scene, tool } = fixture(kind);
     tool.update();
-    scene.map.lightField = new LightField(scene.emf, scene.mapState.lighting);
+    scene.map.lighting.field = new LightField(
+      scene.emf,
+      scene.mapState.lighting,
+    );
     tool.update();
-    assertFieldAt(scene.map.lightField, kind, destination);
+    assertFieldAt(scene.map.lighting.field, kind, destination);
     tool.cancel();
-    assertFieldAt(scene.map.lightField, kind, origin);
-    assert.equal(scene.map.displacedLampKey, null);
+    assertFieldAt(scene.map.lighting.field, kind, origin);
+    assert.equal(scene.map.lighting.displacedLampKey, null);
   });
 
   test(`${kind}: move preview replaces the origin; cancelling restores all contributions`, () => {

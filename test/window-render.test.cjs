@@ -20,6 +20,9 @@ global.Phaser = {
   },
 };
 const { EOMap } = require("../src/core/gameobjects/eomap");
+const {
+  LightingRenderer,
+} = require("../src/core/gameobjects/lighting-renderer");
 const { EMF } = require("../src/core/data/emf");
 const { defaultLighting } = require("../src/core/lighting/lamps");
 const {
@@ -76,8 +79,6 @@ function makeMap() {
     renderListChangesSinceLastTick: 0,
     selectedLayer: 3,
     animationFrame: 0,
-    lightingSettings: defaultLighting(),
-    lightingPreview: true,
     layerVisibility: { isLayerVisible: () => true },
     camera: {
       dirty: false,
@@ -96,6 +97,9 @@ function makeMap() {
       },
     },
   });
+  map.lighting = new LightingRenderer(map, {}, null);
+  map.lighting.settings = defaultLighting();
+  map.lighting.enabled = true;
   return map;
 }
 
@@ -186,7 +190,7 @@ test("map destruction during decode releases pending assets without accessing th
   const b = entryFor(477, 20, 200).entry;
   const finishB = defer(b);
   map.setTileGraphic(3, 4, 3, b);
-  map.lampTextures = { destroy() {} };
+  map.lighting.textures = { destroy() {} };
   map.destroy();
   assert.doesNotThrow(finishB);
   assert.deepEqual([a.refCount, b.refCount], [0, 0]);
@@ -238,17 +242,17 @@ test("static visible maps retain their cached frame across animation ticks", asy
 test("unchanged lighting and preview selection retain the map render cache", () => {
   const map = makeMap();
   let updates = 0;
-  map.lightField = {
+  map.lighting.field = {
     setSettings() {
       updates++;
     },
   };
   map.cachedFrame = { dirty: false };
-  map.setLighting(map.lightingSettings);
+  map.setLighting(map.lighting.settings);
   map.setLightingPreview(true);
   assert.equal(updates, 0);
   assert.equal(map.cachedFrame.dirty, false);
-  map.setLighting({ ...map.lightingSettings });
+  map.setLighting({ ...map.lighting.settings });
   assert.equal(updates, 1);
   assert.equal(map.cachedFrame.dirty, true);
 });
@@ -259,13 +263,13 @@ test("a replacement window mask is not painted or picked over retained old artwo
   const graphic = await install(map, 351, old.entry);
   map.emf.getTile(3, 4).gfx[3] = 477;
   let requested = 0;
-  map.lampTextures = {
+  map.lighting.textures = {
     getWindow() {
       requested++;
       throw new Error("Wrong mask requested before asset replacement");
     },
   };
-  assert.equal(map.pickWindow(graphic.x + 20, graphic.y + 125), null);
+  assert.equal(map.lighting.pickWindow(graphic.x + 20, graphic.y + 125), null);
   const target = {
     renderTarget: {},
     texture: { setFilter() {} },
@@ -292,17 +296,17 @@ test("window glass picks on the first click after zoom and pan while frame click
   const map = makeMap();
   const resource = entryFor(477, 20, 200);
   const graphic = await install(map, 477, resource.entry);
-  map.lampTextures = { getWindow: () => resource.mask };
+  map.lighting.textures = { getWindow: () => resource.mask };
   map.camera.scrollX = -100;
   map.camera.scrollY = -100;
   for (const zoom of [0.5, 1, 2.5]) {
     map.camera.zoom = zoom;
     const screenX = (graphic.x + 20.5 - map.camera.scrollX) * zoom;
     const screenY = (graphic.y + 200.5 - map.camera.scrollY) * zoom;
-    const picked = map.pickWindow(screenX, screenY);
+    const picked = map.lighting.pickWindow(screenX, screenY);
     assert.equal(picked?.graphic, 477);
     assert.equal(picked?.key, "3,4,3,477");
-    assert.equal(map.pickWindow(screenX - zoom, screenY), null);
+    assert.equal(map.lighting.pickWindow(screenX - zoom, screenY), null);
   }
 });
 
@@ -320,20 +324,23 @@ test("either half of a split church window selects and lights the one window tha
     [WINDOW_DEFINITIONS.get(3), owner.mask],
     [WINDOW_PARTS.get(4), partner.mask],
   ]);
-  map.lampTextures = { getWindow: (spec) => masks.get(spec) };
+  map.lighting.textures = { getWindow: (spec) => masks.get(spec) };
   for (const [x, glassX, glassY] of [
     [3, 28, 190],
     [4, 8, 230],
   ]) {
     const graphic = map.tileGraphics[map.getTileGraphicIndex(x, 4, 3)];
-    const picked = map.pickWindow(
+    const picked = map.lighting.pickWindow(
       graphic.x + glassX + 0.5,
       graphic.y + glassY + 0.5,
     );
     assert.equal(picked?.key, "3,4,3,3");
     assert.equal(picked?.name, "Arched window");
     // Masonry beside the glass selects nothing.
-    assert.equal(map.pickWindow(graphic.x + 1.5, graphic.y + 1.5), null);
+    assert.equal(
+      map.lighting.pickWindow(graphic.x + 1.5, graphic.y + 1.5),
+      null,
+    );
   }
   // Both halves draw a glow mask tinted by the owner's settings.
   const target = {
@@ -351,7 +358,7 @@ test("either half of a split church window selects and lights the one window tha
   };
   map.cachedFrame = { dirty: true, renderTexture: target };
   map.drawScale = 1;
-  map.lightingSettings = {
+  map.lighting.settings = {
     ...defaultLighting(),
     windows: {
       "3,4,3,3": {
@@ -378,7 +385,7 @@ test("opaque animated foreground pixels block selection but transparent holes re
   const map = makeMap();
   const resource = entryFor(477, 20, 200);
   const graphic = await install(map, 477, resource.entry);
-  map.lampTextures = { getWindow: () => resource.mask };
+  map.lighting.textures = { getWindow: () => resource.mask };
   const foregroundPixels = {
     width: 128,
     height: 64,
@@ -407,10 +414,13 @@ test("opaque animated foreground pixels block selection but transparent holes re
   };
   map.renderList.push(foreground);
   map.animationFrame = 1;
-  assert.equal(map.pickWindow(graphic.x + 20.5, graphic.y + 200.5), null);
+  assert.equal(
+    map.lighting.pickWindow(graphic.x + 20.5, graphic.y + 200.5),
+    null,
+  );
   map.animationFrame = 0;
   assert.equal(
-    map.pickWindow(graphic.x + 20.5, graphic.y + 200.5)?.graphic,
+    map.lighting.pickWindow(graphic.x + 20.5, graphic.y + 200.5)?.graphic,
     477,
   );
 });
@@ -419,7 +429,7 @@ test("foreground awaiting its new hit mask cannot select glass behind it", async
   const map = makeMap();
   const resource = entryFor(477, 20, 200);
   const graphic = await install(map, 477, resource.entry);
-  map.lampTextures = { getWindow: () => resource.mask };
+  map.lighting.textures = { getWindow: () => resource.mask };
   const frame = { width: 32, height: 32, cutX: 0, cutY: 0 };
   map.renderList.push({
     x: graphic.x,
@@ -432,5 +442,5 @@ test("foreground awaiting its new hit mask cannot select glass behind it", async
       asset: { textureFrame: frame, getFrame: () => frame },
     },
   });
-  assert.equal(map.pickWindow(graphic.x + 20, graphic.y + 200), null);
+  assert.equal(map.lighting.pickWindow(graphic.x + 20, graphic.y + 200), null);
 });
