@@ -62,40 +62,44 @@ export function lampShown(map, lighting, shown, displaced = null) {
  * still being prepared: get(graphic) gives { mask, halo }, and
  * getFlame(graphic) { base, frames }. Each glass item carries its own
  * `texture`, { mask }. `step` is the flame clock's step (flameStep).
+ * `strength`, from 0 to 1, scales halos, hot cores and glass: see
+ * glowStrength, which fades them by day. Flames themselves always show.
  */
-export function glowOf(textures, step, shown, lamp, glass) {
+export function glowOf(textures, step, shown, lamp, glass, strength = 1) {
   if (!lamp && !glass.length) return null;
   const glow = { art: null, halo: null, overlays: [], flickers: false };
-  if (lamp) addLampGlow(glow, textures, step, shown.graphic, lamp);
-  for (const { light, texture } of glass) addPaneGlow(glow, light, texture);
+  if (lamp) addLampGlow(glow, textures, step, shown.graphic, lamp, strength);
+  if (strength > 0)
+    for (const { light, texture } of glass)
+      addPaneGlow(glow, light, texture, strength);
   return glow.halo || glow.overlays.length ? glow : null;
 }
 
 // A lamp's halo, and its glowing glass or moving flame. A part of a lamp
 // drawn across tiles, such as a fireplace's right-hand half, draws its
 // share of its owner's flame in step with it; the owner alone has a halo.
-function addLampGlow(glow, textures, step, graphic, lamp) {
+function addLampGlow(glow, textures, step, graphic, lamp, strength) {
   const own = graphic === lamp.graphic;
   const appearance = emissionAppearance(lamp);
+  const glows = appearance.enabled && strength > 0;
   // A switched-off light keeps the game's still flame.
   const flame =
     lamp.enabled !== false && FLAMES.has(graphic)
       ? textures.getFlame(graphic)
       : null;
   const flicker = flame ? flameFlicker(lamp.key, step) : 1;
-  const emission =
-    own && appearance.enabled ? textures.get(lamp.graphic) : null;
+  const emission = own && glows ? textures.get(lamp.graphic) : null;
   if (emission) {
     const source = projectLight(lamp);
     glow.halo = {
       frame: emission.halo,
       x: source.x - emission.halo.width / 2,
       y: source.sourceY - emission.halo.height / 2,
-      alpha: appearance.haloAlpha * flicker,
+      alpha: appearance.haloAlpha * flicker * strength,
       tint: appearance.haloColor,
     };
   }
-  const core = Math.min(1, appearance.coreAlpha * flicker);
+  const core = Math.min(1, appearance.coreAlpha * flicker) * strength;
   if (flame) {
     const frame = flame.frames[flameFrame(lamp.key, step, flame.frames.length)];
     if (own) glow.art = flame.base;
@@ -108,7 +112,7 @@ function addLampGlow(glow, textures, step, graphic, lamp) {
       alpha: 1,
       tint: 0xffffff,
     });
-    if (appearance.enabled)
+    if (glows)
       glow.overlays.push({
         frame: frame.core,
         dx: frame.x,
@@ -127,14 +131,14 @@ function addLampGlow(glow, textures, step, graphic, lamp) {
 }
 
 // A window pane's glow: its lit glass over the wall art.
-function addPaneGlow(glow, light, texture) {
+function addPaneGlow(glow, light, texture, strength) {
   const pane = windowAppearance(light);
   if (texture && pane.enabled)
     glow.overlays.push({
       frame: texture.mask,
       dx: 0,
       dy: 0,
-      alpha: pane.alpha,
+      alpha: pane.alpha * strength,
       tint: pane.color,
     });
 }

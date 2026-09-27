@@ -126,6 +126,19 @@ export declare const AMBIENT_PRESETS: Readonly<
 >;
 export declare function defaultLighting(): Lighting;
 export declare function ambientSettings(value: unknown): AmbientSettings;
+
+/** Seconds in a day: the range of a time of day, from midnight. */
+export declare const SECONDS_PER_DAY: number;
+/**
+ * The ambient light at a time of day, in seconds after midnight: night until
+ * dawn, day from mid-morning to early evening, with dusk's light between.
+ */
+export declare function ambientAt(seconds: number): AmbientSettings;
+/**
+ * How strongly lamp glass, halos and window panes glow under an ambient
+ * light, from 0 in daylight to 1 at night: glowOf's `strength`.
+ */
+export declare function glowStrength(ambient: AmbientSettings): number;
 export declare function selectedLight(
   map: LightingMap,
   lighting: Lighting,
@@ -482,6 +495,7 @@ export declare function glowOf<F>(
   shown: ShownGraphic,
   lamp: Light | null,
   glass: readonly GlassItem<F>[],
+  strength?: number,
 ): Glow<F> | null;
 
 // ---------------------------------------------------------------- File --

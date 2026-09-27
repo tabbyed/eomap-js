@@ -18,6 +18,7 @@ export {
   selectedLight,
   withLight,
 } from "./model/settings.js";
+export { SECONDS_PER_DAY, ambientAt, glowStrength } from "./model/daylight.js";
 export {
   CHICAGO_AMBER,
   FREE_LIGHT_PRESET,
