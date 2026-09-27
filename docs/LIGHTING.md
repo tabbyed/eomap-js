@@ -4,7 +4,7 @@ A one-page map of the lighting work: what it does, where it lives and how it's c
 
 ## What it does
 
-- **Lights native fixtures on their own.** Street, tall and festive lamps, lanterns, garden lanterns, five kinds of candle, a blue brazier, the fireplace, 30 window styles and the church's wall lantern. A fixture drawn from two graphics, like the fireplace, is one light described as parts.
+- **Lights native fixtures on their own.** Street, tall and festive lamps, lanterns, garden lanterns, candlesticks and five other kinds of candle, a blue brazier, the fireplace, 30 window styles and the church's wall lantern. A fixture drawn from two graphics, like the fireplace, is one light described as parts.
 - **Keeps light out of rooms.** Walls are edges between tiles, and each light ray-casts against the solid ones. Only curated building walls block; fences and decorations don't.
 - **Shades walls as surfaces.** A solid wall is lit in 16 px strips on a grid shared by every wall, sampled at each strip's real height, so neighbouring pieces meet without seams. Indoor walls are solid too, so a shelf candle lights its wall smoothly.
 - **Animates flames.** Candles, the brazier and the fireplace swap their still flames for moving ones built from the game's own art, all on one flicker clock with uneven 120–190 ms steps.

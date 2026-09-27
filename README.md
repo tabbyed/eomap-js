@@ -9,7 +9,7 @@ An Endless Map File (EMF) editor written in JavaScript.
 
 ## Lighting
 
-**Lighting** sits beside **Special** in the layer palette (shortcut **L**). While it's selected, native lamps and windows light up on their own: street, tall and festive lamps, lanterns and garden lanterns; shelf, bedside, desk, cabinet and shrine candles; a blue brazier; the fireplace; 30 window styles and the church's wall lantern. Candles, the brazier and the fireplace burn with moving flames. Every other tool shows the map as the game draws it.
+**Lighting** sits beside **Special** in the layer palette (shortcut **L**). While it's selected, native lamps and windows light up on their own: street, tall and festive lamps, lanterns and garden lanterns; candlesticks; shelf, bedside, desk, cabinet and shrine candles; a blue brazier; the fireplace; 30 window styles and the church's wall lantern. Candles, the brazier and the fireplace burn with moving flames. Every other tool shows the map as the game draws it.
 
 You can add lamps or free lights, tune any light, and save the result to a companion `.lighting.json` file beside the map. The EMF itself never changes, so servers and clients that know nothing about lighting keep working with it.
 

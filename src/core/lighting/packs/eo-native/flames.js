@@ -53,6 +53,8 @@ export const flames = new Map([
     661,
     { frames: candleFlame, x: 9, y: -1, clear: [9, 2, 16, 6], mirror: true },
   ],
+  // The candlestick's wick tops its sprite; the flame rises above it.
+  [40, taper(6, -6)],
   [591, taper(42, 5)],
   [596, taper(10, 5)],
   [73, taper(23, 1)],

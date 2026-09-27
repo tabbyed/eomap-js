@@ -79,6 +79,17 @@ export const lamps = [
     description: "A tall lamp with a wreath for festive streets",
   },
   {
+    id: "candlestick",
+    name: "Candlestick",
+    graphic: 40,
+    ...candlelight,
+    // The flame stands higher than a table candle's, so it reaches further.
+    radius: 3.5,
+    height: 51,
+    anchor: { x: -2, y: 7 },
+    description: "A tall iron candlestick, as in Aeven's church",
+  },
+  {
     id: "shelf-candle",
     name: "Shelf candle",
     graphic: 73,
@@ -189,6 +200,7 @@ export const bulbGlass = new Map([
   [561, festiveTallGlass],
   [565, festiveTallMirrorGlass],
   [566, festiveTallMirrorGlass],
+  [40, { left: 6, top: 0, right: 10, bottom: 8 }],
   [73, { left: 23, top: 7, right: 26, bottom: 14 }],
   [74, { left: 13, top: 7, right: 16, bottom: 14 }],
   [587, bedsideCandleFlame],
