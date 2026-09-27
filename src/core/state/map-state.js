@@ -1,6 +1,14 @@
 import { CommandInvoker } from "../command/command";
 import { defaultLighting } from "../lighting/model/settings.js";
 
+const DEFAULT_LIGHTING_JSON = JSON.stringify(defaultLighting());
+
+// For each lighting-only command, the newest map command beneath it on the
+// undo stack. That cannot change while the command is on the stack: only
+// undo removes what lies beneath, and it removes the command first; redo
+// returns it onto the same commands. So each is found once.
+const mapCommandBeneath = new WeakMap();
+
 export class MapState {
   constructor() {
     this.fileHandle = null;
@@ -104,16 +112,31 @@ export class MapState {
     return this.cachedLightingJson;
   }
 
+  // The newest command that changed the EMF. `dirty` reads this after every
+  // edit, so lighting-only commands above it are skipped through what each
+  // remembers: amortized O(1) rather than O(lighting edits) per read.
   get currentMapCommand() {
-    for (let i = this.commandInvoker.undoStack.length - 1; i >= 0; i--) {
-      const command = this.commandInvoker.undoStack[i];
-      if (command.affectsMap !== false) return command;
+    const stack = this.commandInvoker.undoStack;
+    const skipped = [];
+    let found = null;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const command = stack[i];
+      if (command.affectsMap !== false) {
+        found = command;
+        break;
+      }
+      if (mapCommandBeneath.has(command)) {
+        found = mapCommandBeneath.get(command);
+        break;
+      }
+      skipped.push(command);
     }
-    return null;
+    for (const command of skipped) mapCommandBeneath.set(command, found);
+    return found;
   }
 
   get hasLightingMetadata() {
-    return this.lightingJson !== JSON.stringify(defaultLighting());
+    return this.lightingJson !== DEFAULT_LIGHTING_JSON;
   }
 
   // Lighting other than the default is kept in a companion file.

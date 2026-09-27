@@ -462,3 +462,25 @@ test("committing one setting drops a preview of another", async () => {
   for (let i = 0; i < field.values.length; i++)
     assert.ok(Math.abs(field.values[i] - committed.values[i]) < 1e-6);
 });
+
+test("committing an unchanged value adds no history; changing any field does", async () => {
+  const { app, state } = fixture();
+  const commit = (type, value) =>
+    app.lightingController.handle({ type, value });
+  const lamp = model.lampAt(state.emf, state.lighting, 5, 5);
+
+  await commit(LightingAction.EditLight, { brightness: 1.2 });
+  assert.equal(state.commandInvoker.undoStack.length, 1);
+  await commit(LightingAction.EditLight, { brightness: 1.2 });
+  assert.equal(state.commandInvoker.undoStack.length, 1, "same brightness");
+  await commit(LightingAction.EditLight, { color: lamp.color });
+  assert.equal(state.commandInvoker.undoStack.length, 1, "same colour");
+  await commit(LightingAction.EditLight, { radius: lamp.radius + 1 });
+  assert.equal(state.commandInvoker.undoStack.length, 2);
+
+  await commit(LightingAction.EditAmbient, state.lighting.ambient);
+  assert.equal(state.commandInvoker.undoStack.length, 2, "same ambient");
+  await commit(LightingAction.EditAmbient, { brightness: 0.4 });
+  assert.equal(state.commandInvoker.undoStack.length, 3);
+  assert.equal(state.lighting.ambient.brightness, 0.4);
+});

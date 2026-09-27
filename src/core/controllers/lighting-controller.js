@@ -3,6 +3,7 @@ import { LightingAction } from "./lighting-actions.js";
 import { saveLighting } from "../lighting/file/save.js";
 import {
   ambientSettings,
+  lightEntry,
   selectedLight,
   withLight,
 } from "../lighting/model/settings.js";
@@ -159,7 +160,16 @@ export class LightingController {
     // Move straight from the displayed preview to the next one; the light
     // field only recomputes the lights that differ.
     if (preview) state.gameObject.previewLighting(next);
-    else if (JSON.stringify(next) !== JSON.stringify(state.lighting))
+    else if (
+      // An edit replaces the ambient light or one light's entry and keeps
+      // every other key in place, so comparing that part is O(1) rather
+      // than serializing all the lighting twice.
+      ambient
+        ? JSON.stringify(next.ambient) !==
+          JSON.stringify(state.lighting.ambient)
+        : JSON.stringify(lightEntry(next, light)) !==
+          JSON.stringify(lightEntry(state.lighting, light))
+    )
       this.commit(state, next);
     else state.gameObject.clearLightingPreview();
   }

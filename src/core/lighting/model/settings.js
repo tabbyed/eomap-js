@@ -31,13 +31,19 @@ export function selectedLight(emf, lighting, selection) {
     : lampAt(emf, lighting, selection.x, selection.y);
 }
 
+// Which of the settings' collections holds a light of this kind.
+function collectionOf(light) {
+  if (light.kind === LightKind.Window) return "windows";
+  return light.kind === LightKind.Free ? "lights" : "lamps";
+}
+
+// The stored overrides for one light, or undefined if it has none.
+export function lightEntry(lighting, light) {
+  return lighting[collectionOf(light)]?.[light.key];
+}
+
 export function withLight(lighting, light, settings) {
-  const collection =
-    light.kind === LightKind.Window
-      ? "windows"
-      : light.kind === LightKind.Free
-        ? "lights"
-        : "lamps";
+  const collection = collectionOf(light);
   const entries = { ...lighting[collection] };
   if (settings)
     entries[light.key] =

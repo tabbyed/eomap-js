@@ -33,7 +33,7 @@ export async function saveMapWithLighting(state) {
   const lighting = lightingHandle
     ? serializeLighting(state.emf, state.lighting)
     : null;
-  const savedLighting = JSON.stringify(state.lighting);
+  const savedLighting = state.lightingJson;
   // Default lighting needs no file, so a map-only save covers it too.
   const lightingSaved = Boolean(lightingHandle) || !state.hasLightingMetadata;
   const savedCommand = state.currentMapCommand;
@@ -56,7 +56,7 @@ export async function saveLighting(state, handle) {
   const mapHandle = state.fileHandle;
   const lightingHandle = state.lightingFileHandle;
   const lighting = serializeLighting(state.emf, state.lighting);
-  const savedLighting = JSON.stringify(state.lighting);
+  const savedLighting = state.lightingJson;
   return enqueueSave(state, async () => {
     await handle.write(lighting);
     if (
