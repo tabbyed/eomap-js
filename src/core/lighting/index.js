@@ -14,9 +14,11 @@ export {
   AMBIENT_PRESETS,
   ambientSettings,
   defaultLighting,
+  isOutdoors,
   lightEntry,
   selectedLight,
   withLight,
+  withOutdoors,
 } from "./model/settings.js";
 export { SECONDS_PER_DAY, ambientAt, glowStrength } from "./model/daylight.js";
 export {

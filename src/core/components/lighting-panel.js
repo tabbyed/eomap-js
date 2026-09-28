@@ -1,6 +1,10 @@
 import { css, html, LitElement, svg } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { AMBIENT_PRESETS, selectedLight } from "../lighting/model/settings.js";
+import {
+  AMBIENT_PRESETS,
+  isOutdoors,
+  selectedLight,
+} from "../lighting/model/settings.js";
 import {
   LAMP_PRESETS,
   CHICAGO_AMBER,
@@ -702,6 +706,16 @@ export class LightingPanel extends LitElement {
         <p>
           Night shows each light clearly. Recognised building walls block light;
           fences and decorations let it through.
+        </p>
+        <div class="toggles">
+          ${this.toggle(
+            "Outdoors",
+            isOutdoors(this.mapState.lighting),
+            (value) => this.action(LightingAction.SetOutdoors, value),
+          )}
+        </div>
+        <p>
+          Weather reaches outdoor maps: rain falls when it rains in the game.
         </p>
       </section>
       <footer>

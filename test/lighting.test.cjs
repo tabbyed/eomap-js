@@ -5,8 +5,10 @@ require("../scripts/register-core.cjs");
 const { EMF } = require("../src/core/data/emf");
 const {
   defaultLighting,
+  isOutdoors,
   selectedLight,
   withLight,
+  withOutdoors,
 } = require("../src/core/lighting/model/settings");
 const {
   lampAt,
@@ -113,6 +115,40 @@ test("sidecar round-trip validates the matching map and rejects invalid data", (
     /outside the map/,
     "An unchanged map still rejects entries that do not match it",
   );
+});
+
+test("an outdoor map round-trips through the sidecar; indoors stays the default", () => {
+  const { emf, lighting } = fixture();
+  assert.equal(isOutdoors(lighting), false);
+  const outdoors = withOutdoors(lighting, true);
+  assert.equal(isOutdoors(outdoors), true);
+  const text = serializeLighting(emf, outdoors);
+  assert.equal(JSON.parse(text).outdoors, true);
+  assert.deepEqual(parseLighting(text, emf), outdoors);
+  // Indoors drops the entry, so the file and default lighting stay as before.
+  assert.deepEqual(withOutdoors(outdoors, false), lighting);
+  assert.equal(
+    "outdoors" in JSON.parse(serializeLighting(emf, lighting)),
+    false,
+  );
+  const invalid = JSON.parse(text);
+  invalid.outdoors = "yes";
+  assert.throws(
+    () => parseLighting(JSON.stringify(invalid), emf),
+    /Invalid outdoors/,
+  );
+
+  // Marking a map with default lighting outdoors needs a lighting file, and
+  // undo takes it back to needing none.
+  const state = MapState.fromEMF(EMF.new(6, 6, "Outdoors"));
+  state.gameObject = { setLighting() {} };
+  assert.equal(state.hasLightingMetadata, false);
+  state.commandInvoker.add(
+    new LightingCommand(state, withOutdoors(state.lighting, true)),
+  );
+  assert.equal(state.hasLightingMetadata, true);
+  state.commandInvoker.undo();
+  assert.equal(state.hasLightingMetadata, false);
 });
 
 test("lighting saved before a map edit keeps every light that still matches", () => {

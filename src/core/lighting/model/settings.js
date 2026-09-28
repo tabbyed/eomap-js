@@ -22,6 +22,22 @@ export function defaultLighting() {
   };
 }
 
+/** Whether weather reaches the map, so rain falls there when it rains. */
+export function isOutdoors(lighting) {
+  return lighting?.outdoors === true;
+}
+
+/**
+ * New lighting settings with the map outdoors or not. A map indoors has no
+ * entry, so its lighting can stay the default and need no file.
+ */
+export function withOutdoors(lighting, outdoors) {
+  const next = { ...lighting };
+  if (outdoors) next.outdoors = true;
+  else delete next.outdoors;
+  return next;
+}
+
 export function selectedLight(emf, lighting, selection) {
   if (!selection) return null;
   if (selection.kind === LightKind.Window)

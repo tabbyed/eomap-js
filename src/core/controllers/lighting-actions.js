@@ -14,6 +14,7 @@ export const LightingAction = Object.freeze({
   PreviewLight: "preview-light",
   EditAmbient: "ambient",
   PreviewAmbient: "preview-ambient",
+  SetOutdoors: "outdoors",
   Load: "load",
   Save: "save",
 });

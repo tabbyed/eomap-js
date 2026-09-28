@@ -33,7 +33,7 @@ The same file lights the map in game. [EOWeb](https://github.com/tabbyed/eoweb) 
 
 ![Toggling light guides, switching a church window off and on, and brightening the wall lantern](docs/images/lighting/lighting-howto-windows.gif)
 
-**Scene atmosphere** sets Day, Dusk or Night ambient light. **Load lighting…** and **Save lighting…** read and write the companion file. If the map has changed since the lighting was saved, loading keeps every light that still matches and tells you how many it skipped. Saving the map also saves its lighting. If the lighting has no file yet you're asked for one; cancel, and the map is still saved while the lighting stays unsaved until you choose a file.
+**Scene atmosphere** sets Day, Dusk or Night ambient light, and **Outdoors** marks a map the weather reaches, so rain falls there in EOWeb when the server makes it rain. **Load lighting…** and **Save lighting…** read and write the companion file. If the map has changed since the lighting was saved, loading keeps every light that still matches and tells you how many it skipped. Saving the map also saves its lighting. If the lighting has no file yet you're asked for one; cancel, and the map is still saved while the lighting stays unsaved until you choose a file.
 
 ### How it works
 

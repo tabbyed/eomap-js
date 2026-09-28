@@ -54,6 +54,7 @@ export function serializeLighting(emf, lighting) {
           fingerprint: mapFingerprint(emf),
         },
         ambient: ambientSettings(lighting.ambient),
+        ...(lighting.outdoors ? { outdoors: true } : {}),
         lamps,
         lights,
         windows,
@@ -78,6 +79,8 @@ export function readLightingFile(text, emf) {
     throw new Error("Unsupported lighting file or graphics pack.");
   if (!input.map || typeof input.map !== "object")
     throw new Error("Unsupported lighting file or graphics pack.");
+  if (input.outdoors !== undefined && typeof input.outdoors !== "boolean")
+    throw new Error("Invalid outdoors setting.");
   const mapChanged =
     input.map.width !== emf.width ||
     input.map.height !== emf.height ||
@@ -156,6 +159,7 @@ export function readLightingFile(text, emf) {
       lamps,
       lights,
       windows,
+      ...(input.outdoors ? { outdoors: true } : {}),
     },
     mapChanged,
     dropped,

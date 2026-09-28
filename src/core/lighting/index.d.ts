@@ -81,6 +81,8 @@ export interface Lighting {
   lights: Record<string, LightSettings>;
   /** "x,y,layer,graphic" */
   windows: Record<string, WindowSettings>;
+  /** Weather reaches the map; absent for a map indoors. */
+  outdoors?: true;
 }
 
 /** A light as found on a map: its settings, identity and position. */
@@ -126,6 +128,15 @@ export declare const AMBIENT_PRESETS: Readonly<
 >;
 export declare function defaultLighting(): Lighting;
 export declare function ambientSettings(value: unknown): AmbientSettings;
+/** Whether weather reaches the map, so rain falls there when it rains. */
+export declare function isOutdoors(
+  lighting: Lighting | null | undefined,
+): boolean;
+/** New lighting settings with the map outdoors or not. */
+export declare function withOutdoors(
+  lighting: Lighting,
+  outdoors: boolean,
+): Lighting;
 
 /** Seconds in a day: the range of a time of day, from midnight. */
 export declare const SECONDS_PER_DAY: number;

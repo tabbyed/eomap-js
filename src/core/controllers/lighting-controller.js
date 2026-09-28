@@ -6,6 +6,7 @@ import {
   lightEntry,
   selectedLight,
   withLight,
+  withOutdoors,
 } from "../lighting/model/settings.js";
 import { lightSettings, placedLampTiles } from "../lighting/model/lamps.js";
 import { readLightingFile } from "../lighting/file/lighting-file.js";
@@ -131,6 +132,14 @@ export class LightingController {
         case LightingAction.EditAmbient:
         case LightingAction.PreviewAmbient:
           this.edit(state, type, light, value);
+          return;
+        case LightingAction.SetOutdoors:
+          this.commit(state, withOutdoors(state.lighting, value));
+          updateTool({
+            notice: value
+              ? "Outdoors: rain falls here when it rains in the game."
+              : "Indoors: no weather reaches this map.",
+          });
           return;
         case LightingAction.Load:
           await this.load(state, updateTool);
