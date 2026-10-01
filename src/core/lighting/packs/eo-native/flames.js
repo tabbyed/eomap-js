@@ -67,6 +67,19 @@ export const flames = new Map([
   [747, taper(38, -6)],
   [738, taper(25, -4)],
   [748, taper(13, -6)],
+  // The inn tables' candles (web-only art) have a drawn flame on the wax;
+  // the taper's frames replace it, their wick on the wax's top.
+  [987, { frames: taperFlame, x: 28, y: -3, clear: [29, 0, 31, 3] }],
+  [
+    988,
+    {
+      frames: taperFlame,
+      x: 27,
+      y: -3,
+      clear: [28, 0, 30, 3],
+      mirror: true,
+    },
+  ],
   // The brazier's own fire, bent into frames: a sway that grows with height
   // and tongues that stretch upward. The empty bowl (545) shows beneath, and
   // the fire never covers bowl pixels that it did not already cover.

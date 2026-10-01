@@ -152,6 +152,21 @@ export const lamps = [
     description: "A candle burning on a stone shrine",
   },
   {
+    // Forest Rift's web-only art (EOWeb's assets/gfx-extra): a table set
+    // round a candle in an iron holder, for Frosthollow's inn. 988 is the
+    // same table mirrored.
+    id: "table-candle",
+    name: "Table candle",
+    graphic: 987,
+    variants: [{ graphic: 988, anchor: { x: -3, y: 0 } }],
+    ...candlelight,
+    // A table's worth of light, for the diners round it.
+    radius: 3.5,
+    height: 34,
+    anchor: { x: -2, y: 0 },
+    description: "A candle among a meal on an inn table",
+  },
+  {
     id: "blue-brazier",
     name: "Blue brazier",
     graphic: 546,
@@ -217,6 +232,8 @@ export const bulbGlass = new Map([
   [747, shrineCandleMirrorFlame],
   [738, { left: 25, top: 2, right: 29, bottom: 10 }],
   [748, { left: 13, top: 0, right: 17, bottom: 8 }],
+  [987, { left: 29, top: 0, right: 31, bottom: 3 }],
+  [988, { left: 28, top: 0, right: 30, bottom: 3 }],
   // White flame cores only; the silver bowl and stand are excluded.
   [546, { left: 1, top: 0, right: 40, bottom: 32 }],
   // The hearth has no fire drawn; its glow comes from its moving flames.

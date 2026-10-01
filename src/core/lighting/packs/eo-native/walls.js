@@ -13,6 +13,12 @@ const indoorWalls = [
 // chimney and the closed doors. The window (438) is listed below.
 const logCabins = [433, 434, 435, 436, 437, 439, 440, 441, 442, 443, 574, 576];
 
+// Forest Rift's log walls, which EOWeb draws from its own assets/gfx-extra
+// on IDs the native files leave free: the back (1606) and left (1607) walls
+// of Frosthollow's rooms, those walls with a wall lantern (1608, 1609) and
+// with pictures and trophies hung on them (1610–1620).
+const webOnlyLogWalls = Array.from({ length: 15 }, (_, i) => 1606 + i);
+
 // Opaque surfaces in gfx006 that block light and are shaded as upright
 // surfaces. Wall layers also contain fences, posts, fires and decorations,
 // which let light through and take one tint per bitmap. Walkability
@@ -22,4 +28,4 @@ export const solidWalls = [
   344, 350, 351, 352, 353, 354, 355, 356, 357, 431, 432, 438, 462, 464, 465,
   467, 468, 469, 471, 472, 474, 475, 476, 477, 479, 480, 482, 483, 484, 486,
   534, 535,
-].concat(indoorWalls, logCabins);
+].concat(indoorWalls, logCabins, webOnlyLogWalls);

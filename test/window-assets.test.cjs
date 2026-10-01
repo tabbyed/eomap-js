@@ -78,6 +78,9 @@ const OPENING_HEIGHTS = {
   9: 46.75,
   13: 43,
   12: 48.5, // Wall lantern.
+  // Forest Rift's web-only log walls with a lantern, at head height.
+  1608: 67.75,
+  1609: 67.75,
 };
 
 test("every catalogued window has a pinned opening height", () => {

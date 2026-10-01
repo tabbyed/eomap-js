@@ -267,8 +267,20 @@ const placedAt = new Set(
   ),
 );
 const specs = [...WINDOW_DEFINITIONS.values(), ...WINDOW_PARTS.values()];
+// Forest Rift's web-only walls (EOWeb's assets/gfx-extra) aren't in the
+// native gfx006. Their entries, marked webOnly, are measured from EOWeb's
+// PNGs with the same mask and carried over as they are.
+const webOnly = new Map(
+  require("../docs/window-assets.json")
+    .filter((asset) => asset.webOnly)
+    .map((asset) => [asset.graphic, asset]),
+);
 const audit = [];
 for (const spec of specs) {
+  if (webOnly.has(spec.graphic) && !egf.getResourceInfo(spec.graphic + 100)) {
+    audit.push(webOnly.get(spec.graphic));
+    continue;
+  }
   const isPart = WINDOW_PARTS.get(spec.graphic) === spec;
   const label = `Graphic ${spec.graphic}${isPart ? " (partner half)" : ""}`;
   const problems = [];

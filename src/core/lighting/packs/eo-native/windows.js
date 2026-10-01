@@ -19,6 +19,12 @@ const lanternGlass = [
   [173, 132, 74], [173, 132, 82], [173, 132, 99], [173, 140, 99],
 ];
 
+// The log walls' iron lantern: two ambers the logs never use.
+const logLanternGlass = [
+  [223, 160, 68],
+  [247, 215, 115],
+];
+
 const BRICK = "Brick window";
 const GREY = "Window";
 const TIMBER = "Timber window";
@@ -69,6 +75,10 @@ export const windows = [
   [9, 4, 384, [23, 309, 28, 338], churchGlass, ARCHED],
   [13, 4, 127, [0, 67, 13, 96], churchGlass, ARCHED],
   [12, 4, 159, [3, 105, 11, 111], lanternGlass, LANTERN, lanternDefaults],
+  // Forest Rift's web-only log walls (EOWeb's assets/gfx-extra) with an
+  // iron wall lantern, on the back and left walls of Frosthollow's rooms.
+  [1608, 3, 124, [10, 45, 17, 51], logLanternGlass, LANTERN, lanternDefaults],
+  [1609, 4, 124, [15, 45, 22, 51], logLanternGlass, LANTERN, lanternDefaults],
 ];
 
 // Glass of a window that continues onto a neighbouring sprite on the same

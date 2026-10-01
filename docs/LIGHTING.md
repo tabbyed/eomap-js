@@ -5,6 +5,7 @@ A one-page map of the lighting work: what it does, where it lives and how it's c
 ## What it does
 
 - **Lights native fixtures on their own.** Street, tall and festive lamps, lanterns, garden lanterns, candlesticks and five other kinds of candle, a blue brazier, the fireplace, 30 window styles and the church's wall lantern. A fixture drawn from two graphics, like the fireplace, is one light described as parts.
+- **Lights Forest Rift's web-only art too.** Frosthollow's log walls block light, their wall lanterns glow like the church's, and the inn's table candles burn with the taper flame. EOWeb draws these from its own `assets/gfx-extra`, on IDs the native files leave free, so the editor can't show them, but a map using them lights the same in both.
 - **Keeps light out of rooms.** Walls are edges between tiles, and each light ray-casts against the solid ones. Only curated building walls block; fences and decorations don't.
 - **Shades walls as surfaces.** A solid wall is lit in 16 px strips on a grid shared by every wall, sampled at each strip's real height, so neighbouring pieces meet without seams. Indoor walls are solid too, so a shelf candle lights its wall smoothly.
 - **Animates flames.** Candles, the brazier and the fireplace swap their still flames for moving ones built from the game's own art, all on one flicker clock with uneven 120–190 ms steps.
@@ -38,5 +39,7 @@ npm run test:lighting        # lighting, catalogue, file and package tests
 npm run benchmark:lighting   # CPU benchmarks of the lighting core
 node scripts/audit-window-assets.cjs --gfx /path/to/gfx --maps /path/to/maps
 ```
+
+The audit reads the native gfx006. Web-only windows have no bitmap there, so their entries in `docs/window-assets.json`, marked `webOnly`, are measured from EOWeb's PNGs with the same mask and carried over as they are.
 
 Sampling the field costs the same however many lights a map has, and changing one light recomputes only what it reaches. Roof surfaces, finite-height blockers and custom graphics still need geometry metadata before they can be lit correctly.

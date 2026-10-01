@@ -3550,5 +3550,107 @@
       }
     ],
     "unpaired": []
+  },
+  {
+    "graphic": 1608,
+    "resource": 1708,
+    "name": "Wall lantern",
+    "width": 32,
+    "height": 124,
+    "frames": 1,
+    "glass": [
+      [223, 160, 68],
+      [247, 215, 115]
+    ],
+    "glassPixels": 18,
+    "glassBoundsExclusive": [10, 45, 17, 51],
+    "panes": [
+      {
+        "area": 13,
+        "bounds": [14, 45, 17, 51]
+      },
+      {
+        "area": 5,
+        "bounds": [10, 47, 12, 50]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00284.emf",
+        "x": 6,
+        "y": 0,
+        "layer": 3
+      },
+      {
+        "map": "00284.emf",
+        "x": 12,
+        "y": 0,
+        "layer": 3
+      },
+      {
+        "map": "00285.emf",
+        "x": 4,
+        "y": 0,
+        "layer": 3
+      },
+      {
+        "map": "00285.emf",
+        "x": 8,
+        "y": 0,
+        "layer": 3
+      }
+    ],
+    "webOnly": true
+  },
+  {
+    "graphic": 1609,
+    "resource": 1709,
+    "name": "Wall lantern",
+    "width": 32,
+    "height": 124,
+    "frames": 1,
+    "glass": [
+      [223, 160, 68],
+      [247, 215, 115]
+    ],
+    "glassPixels": 18,
+    "glassBoundsExclusive": [15, 45, 22, 51],
+    "panes": [
+      {
+        "area": 13,
+        "bounds": [15, 45, 18, 51]
+      },
+      {
+        "area": 5,
+        "bounds": [20, 47, 22, 50]
+      }
+    ],
+    "occurrences": [
+      {
+        "map": "00284.emf",
+        "x": 0,
+        "y": 4,
+        "layer": 4
+      },
+      {
+        "map": "00284.emf",
+        "x": 0,
+        "y": 10,
+        "layer": 4
+      },
+      {
+        "map": "00285.emf",
+        "x": 0,
+        "y": 4,
+        "layer": 4
+      },
+      {
+        "map": "00285.emf",
+        "x": 0,
+        "y": 9,
+        "layer": 4
+      }
+    ],
+    "webOnly": true
   }
 ]
